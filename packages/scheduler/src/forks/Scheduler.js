@@ -103,6 +103,7 @@ const isInputPending =
 
 const continuousOptions = {includeContinuous: enableIsInputPendingContinuous};
 
+  // 将延期队列中到期的任务出队，都放到任务队列中
 function advanceTimers(currentTime) {
   // Check for tasks that are no longer delayed and add them to the queue.
   let timer = peek(timerQueue);
@@ -128,16 +129,21 @@ function advanceTimers(currentTime) {
 }
 
 function handleTimeout(currentTime) {
+  // 定时到期了，则取消标记
   isHostTimeoutScheduled = false;
+  // 将延期队列中到期的任务出队，都放到任务队列中
   advanceTimers(currentTime);
 
   if (!isHostCallbackScheduled) {
     if (peek(taskQueue) !== null) {
+      // 标记正在调度 任务
       isHostCallbackScheduled = true;
       requestHostCallback(flushWork);
     } else {
+      // 任务队列中没有 任务
       const firstTimer = peek(timerQueue);
       if (firstTimer !== null) {
+        // 继续定时
         requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
       }
     }
@@ -306,6 +312,7 @@ function unstable_wrapCallback(callback) {
 }
 
 function unstable_scheduleCallback(priorityLevel, callback, options) {
+  // 获取 当前时间 相对于页面加载的时间 差值
   var currentTime = getCurrentTime();
 
   var startTime;
@@ -353,17 +360,23 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
   if (enableProfiling) {
     newTask.isQueued = false;
   }
-
+  
+  // 存在 delay，延期任务
   if (startTime > currentTime) {
     // This is a delayed task.
     newTask.sortIndex = startTime;
+    // 放入延期队列
     push(timerQueue, newTask);
     if (peek(taskQueue) === null && newTask === peek(timerQueue)) {
+      // 所有任务都是延期的，并且当前 newTask 是最早的延期任务
       // All tasks are delayed, and this is the task with the earliest delay.
       if (isHostTimeoutScheduled) {
         // Cancel an existing timeout.
+        // 新来了一个任务，且新来的任务的延期时间最小；存在旧的正在定时的延期任务
+        // 则取消定时
         cancelHostTimeout();
       } else {
+        // 表示当前 存在需要且正在定时的 延期任务。【对应下面的 Schedule a timeout】
         isHostTimeoutScheduled = true;
       }
       // Schedule a timeout.
@@ -453,6 +466,14 @@ function shouldYieldToHost() {
   // eventually yield regardless, since there could be a pending paint that
   // wasn't accompanied by a call to `requestPaint`, or other main thread tasks
   // like network events.
+  /* 主线程已被阻塞了一段不可忽略的时间。我们
+可能希望放弃对主线程的控制，以便浏览器可以执行
+高优先级任务。主要是绘画和用户输入。如果有
+挂起的绘画或挂起的输入，那么我们应该屈服。但如果有
+两者都不是，那么我们可以在保持反应的同时减少屈服频率。我们将
+最终无论如何都会屈服，因为可能会有一种悬而未决的油漆
+没有附带对“requestPaint”或其他主线程任务的调用
+比如网络事件。 */
   if (enableIsInputPending) {
     if (needsPaint) {
       // There's a pending paint (signaled by `requestPaint`). Yield now.
