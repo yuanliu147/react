@@ -28,7 +28,7 @@ import {
   NoTimestamp,
   TotalLanes,
   createLaneMap,
-} from './ReactFiberLane.new';
+} from './ReactFiberLane.new.js';
 import {
   enableSuspenseCallback,
   enableCache,
