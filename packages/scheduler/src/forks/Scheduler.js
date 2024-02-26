@@ -156,9 +156,11 @@ function flushWork(hasTimeRemaining, initialTime) {
   }
 
   // We'll need a host callback the next time work is scheduled.
+  // 下次安排工作时，我们需要一个主机回调。
   isHostCallbackScheduled = false;
   if (isHostTimeoutScheduled) {
     // We scheduled a timeout but it's no longer needed. Cancel it.
+    // 我们安排了一个 timeout ，但不再需要了。取消它。
     isHostTimeoutScheduled = false;
     cancelHostTimeout();
   }
@@ -204,19 +206,26 @@ function workLoop(hasTimeRemaining, initialTime) {
       currentTask.expirationTime > currentTime &&
       (!hasTimeRemaining || shouldYieldToHost())
     ) {
+      // 时间尚未过期 的时候，不存在空闲时间了，或者执行的任务超过了 5ms.
       // This currentTask hasn't expired, and we've reached the deadline.
+      // 此当前任务尚未过期，我们已经到了截止日期。
       break;
     }
     const callback = currentTask.callback;
     if (typeof callback === 'function') {
       currentTask.callback = null;
+      // 任务的优先级
       currentPriorityLevel = currentTask.priorityLevel;
+      // 任务回调是否 超时 => 决定优先级
       const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
       if (enableProfiling) {
         markTaskRun(currentTask, currentTime);
       }
+
       const continuationCallback = callback(didUserCallbackTimeout);
+
       currentTime = getCurrentTime();
+      // 如果调度的回调 仍然存在，继续调度
       if (typeof continuationCallback === 'function') {
         currentTask.callback = continuationCallback;
         if (enableProfiling) {
@@ -235,6 +244,7 @@ function workLoop(hasTimeRemaining, initialTime) {
     } else {
       pop(taskQueue);
     }
+    // 继续下一个任务。
     currentTask = peek(taskQueue);
   }
   // Return whether there's additional work
@@ -538,6 +548,7 @@ const performWorkUntilDeadline = () => {
     const currentTime = getCurrentTime();
     // Keep track of the start time so we can measure how long the main thread
     // has been blocked.
+    // 记录开始时间，这样我们就可以测量主线程被阻塞的时间。
     startTime = currentTime;
     const hasTimeRemaining = true;
 
