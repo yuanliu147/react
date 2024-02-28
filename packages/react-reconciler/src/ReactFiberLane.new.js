@@ -515,11 +515,17 @@ export function getHighestPriorityLane(lanes: Lanes): Lane {
   return lanes & -lanes;
 }
 
+// Arbitrary 任意的
 export function pickArbitraryLane(lanes: Lanes): Lane {
   // This wrapper function gets inlined. Only exists so to communicate that it
   // doesn't matter which bit is selected; you can pick any bit without
   // affecting the algorithms where its used. Here I'm using
   // getHighestPriorityLane because it requires the fewest operations.
+/* 
+  这个包装器函数被内联。只是为了通信而存在，所以选择哪一位并不重要；
+  您可以在不影响所使用的算法的情况下选择任何比特。
+  这里我使用getHighestPriorityLane，因为它需要最少的操作。
+*/
   return getHighestPriorityLane(lanes);
 }
 

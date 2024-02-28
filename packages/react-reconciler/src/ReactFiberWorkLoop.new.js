@@ -276,12 +276,14 @@ const RootCompleted = 5;
 const RootDidNotComplete = 6;
 
 // Describes where we are in the React execution stack
+// 描述我们在 React 执行堆栈中的位置
 let executionContext: ExecutionContext = NoContext;
 // The root we're working on
 let workInProgressRoot: FiberRoot | null = null;
 // The fiber we're working on
 let workInProgress: Fiber | null = null;
 // The lanes we're rendering
+// 我们正在渲染的 lane 集合
 let workInProgressRootRenderLanes: Lanes = NoLanes;
 
 // Stack that allows components to change the render lanes for its subtree
@@ -289,9 +291,19 @@ let workInProgressRootRenderLanes: Lanes = NoLanes;
 // case where it's different from `workInProgressRootRenderLanes` is when we
 // enter a subtree that is hidden and needs to be unhidden: Suspense and
 // Offscreen component.
-//
+
 // Most things in the work loop should deal with workInProgressRootRenderLanes.
 // Most things in begin/complete phases should deal with subtreeRenderLanes.
+/* 
+允许组件更改其子树的渲染通道的堆栈这是我们从根开始处理的通道的超集。
+它与“workInProgressRootRenderLanes”不同的唯一情况是，当我们输入一个隐藏且需要取消隐藏的子树时：Suspense和Offscreen组件。
+
+
+工作循环中的大多数事情都应该处理workInProgressRootRenderLanes。
+
+开始/完成阶段的大多数事情都应该处理子树RenderLanes。
+
+*/
 export let subtreeRenderLanes: Lanes = NoLanes;
 const subtreeRenderLanesCursor: StackCursor<Lanes> = createCursor(NoLanes);
 
@@ -303,6 +315,12 @@ let workInProgressRootFatalError: mixed = null;
 // slightly different than `renderLanes` because `renderLanes` can change as you
 // enter and exit an Offscreen tree. This value is the combination of all render
 // lanes for the entire render phase.
+/* 
+“Included”车道是指在此渲染过程中使用的车道。
+它与“renderLanes”略有不同，因为“renderLanes”可以在进入和退出屏幕外树时更改。
+
+该值是整个渲染阶段所有渲染通道的组合。
+*/
 let workInProgressRootIncludedLanes: Lanes = NoLanes;
 // The work left over by components that were visited during this render. Only
 // includes unprocessed updates, not work in bailed out children.
@@ -468,6 +486,15 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     // This behavior is only a fallback. The flag only exists until we can roll
     // out the setState warning, since existing code might accidentally rely on
     // the current behavior.
+    /* 
+这是渲染阶段更新。这些都没有得到官方支持。
+旧的行为是为其提供与当前渲染的内容相同的“线程”（通道）。
+因此，如果您对稍后在同一渲染中发生的组件调用“setState”，它将刷新。
+理想情况下，我们希望删除特殊情况，并将它们视为来自交错事件。
+无论如何，这种模式没有得到官方支持。这种行为只是一种倒退。
+该标志只存在于我们可以推出setState警告之前，因为现有代码可能会意外地依赖于当前行为。
+    */
+
     return pickArbitraryLane(workInProgressRootRenderLanes);
   }
 
@@ -497,10 +524,18 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
   // Updates originating inside certain React methods, like flushSync, have
   // their priority set by tracking it with a context variable.
-  //
+  
   // The opaque type returned by the host config is internally a lane, so we can
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
+
+/* 
+  源自某些React方法内部的更新，如flushSync，通过使用上下文变量跟踪它来设置优先级。
+
+  主机配置返回的不透明类型在内部是一个通道，所以我们可以直接使用它。
+
+  TODO:将此类型转换移动到事件优先级模块。
+*/
   const updateLane: Lane = (getCurrentUpdatePriority(): any);
   if (updateLane !== NoLane) {
     return updateLane;
@@ -508,10 +543,20 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
   // This update originated outside React. Ask the host environment for an
   // appropriate priority, based on the type of event.
-  //
+  
   // The opaque type returned by the host config is internally a lane, so we can
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
+
+/* 
+  此更新源自React之外。根据事件类型，向宿主环境询问适当的优先级。
+
+  主机配置返回的不透明类型在内部是一个通道，所以我们可以直接使用它。
+
+  TODO:将此类型转换移动到事件优先级模块。
+*/
+
+  // 初始情况 返回 DefaultEventPriority => DefaultLane
   const eventLane: Lane = (getCurrentEventPriority(): any);
   return eventLane;
 }

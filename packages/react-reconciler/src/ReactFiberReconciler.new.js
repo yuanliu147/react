@@ -317,7 +317,14 @@ export function createHydrationContainer(
 
   return root;
 }
-
+/**
+ * 
+ * @param {*} element 需要挂载的组件，<App />
+ * @param {*} container FiberRootNode
+ * @param {*} parentComponent 
+ * @param {*} callback 
+ * @returns 
+ */
 export function updateContainer(
   element: ReactNodeList,
   container: OpaqueRoot,
@@ -328,14 +335,18 @@ export function updateContainer(
     onScheduleRoot(container, element);
   }
   const current = container.current;
+  // 初始化时，eventTime = Date.now()
   const eventTime = requestEventTime();
+  // 初始化时，defaultLine
   const lane = requestUpdateLane(current);
 
   if (enableSchedulingProfiler) {
     markRenderScheduled(lane);
   }
 
+  // 初始情况是 {},
   const context = getContextForSubtree(parentComponent);
+
   if (container.context === null) {
     container.context = context;
   } else {
@@ -396,7 +407,6 @@ export {
   isAlreadyRendering,
   flushPassiveEffects,
 };
-
 export function getPublicRootInstance(
   container: OpaqueRoot,
 ): React$Component<any, any> | PublicInstance | null {

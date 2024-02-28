@@ -85,6 +85,7 @@ type DispatchEntry = {|
 
 export type DispatchQueue = Array<DispatchEntry>;
 
+// 事件初始化
 // TODO: remove top-level side effect.
 SimpleEventPlugin.registerEvents();
 EnterLeaveEventPlugin.registerEvents();
@@ -176,6 +177,7 @@ function extractEvents(
 }
 
 // List of events that need to be individually attached to media elements.
+// 需要单独附加到媒体元素的事件列表。
 export const mediaEventTypes: Array<DOMEventName> = [
   'abort',
   'canplay',
@@ -206,6 +208,7 @@ export const mediaEventTypes: Array<DOMEventName> = [
 // We should not delegate these events to the container, but rather
 // set them on the actual target element itself. This is primarily
 // because these events do not consistently bubble in the DOM.
+// 我们不应该将这些事件委托给容器，而是将它们设置在实际的目标元素本身上。这主要是因为这些事件在DOM中并不一致。
 export const nonDelegatedEvents: Set<DOMEventName> = new Set([
   'cancel',
   'close',
@@ -217,6 +220,8 @@ export const nonDelegatedEvents: Set<DOMEventName> = new Set([
   // into this Set. Note: the "error" event isn't an exclusive media event,
   // and can occur on other elements too. Rather than duplicate that event,
   // we just take it from the media events array.
+  // 为了减少字节数，我们将上述媒体事件数组插入到该集合中。
+  // 注意：“error” 事件不是唯一的媒体事件，也可能发生在其他元素上。我们只是从媒体事件阵列中获取该事件，而不是重复该事件。
   ...mediaEventTypes,
 ]);
 
@@ -383,13 +388,16 @@ const listeningMarker =
     .toString(36)
     .slice(2);
 
+// 事件系统注册
 export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
   if (!(rootContainerElement: any)[listeningMarker]) {
     (rootContainerElement: any)[listeningMarker] = true;
     allNativeEvents.forEach(domEventName => {
       // We handle selectionchange separately because it
       // doesn't bubble and needs to be on the document.
+      // 我们单独处理selectionchange，因为它不冒泡，需要在 document 上监听
       if (domEventName !== 'selectionchange') {
+        // 这里对 需要在目标元素上监听的事件，不处理冒泡阶段，只处理捕获阶段。
         if (!nonDelegatedEvents.has(domEventName)) {
           listenToNativeEvent(domEventName, false, rootContainerElement);
         }
@@ -403,6 +411,7 @@ export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
     if (ownerDocument !== null) {
       // The selectionchange event also needs deduplication
       // but it is attached to the document.
+      // selectionchange 事件也需要重复数据消除，但它已附加到文档中。
       if (!(ownerDocument: any)[listeningMarker]) {
         (ownerDocument: any)[listeningMarker] = true;
         listenToNativeEvent('selectionchange', false, ownerDocument);
@@ -412,12 +421,13 @@ export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
 }
 
 function addTrappedEventListener(
-  targetContainer: EventTarget,
+  targetContainer: EventTarget, // targetContainer 为 react 所挂载的那个 html元素。<div id="root"></div>
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   isCapturePhaseListener: boolean,
   isDeferredListenerForLegacyFBSupport?: boolean,
 ) {
+  // 将事件与优先级挂钩
   let listener = createEventListenerWrapperWithPriority(
     targetContainer,
     domEventName,

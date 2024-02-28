@@ -84,9 +84,9 @@ export function createEventListenerWrapper(
 }
 
 export function createEventListenerWrapperWithPriority(
-  targetContainer: EventTarget,
+  targetContainer: EventTarget, // targetContainer 为 react 所挂载的那个 html元素。<div id="root"></div>
   domEventName: DOMEventName,
-  eventSystemFlags: EventSystemFlags,
+  eventSystemFlags: EventSystemFlags, // 冒泡、捕获
 ): Function {
   const eventPriority = getEventPriority(domEventName);
   let listenerWrapper;
@@ -492,8 +492,10 @@ export function getEventPriority(domEventName: DOMEventName): * {
       return ContinuousEventPriority;
     case 'message': {
       // We might be in the Scheduler callback.
+      // 我们可能在调度程序回调中。
       // Eventually this mechanism will be replaced by a check
       // of the current priority on the native scheduler.
+      // 最终，此机制将被检查本机调度器上的当前优先级所取代。
       const schedulerPriority = getCurrentSchedulerPriorityLevel();
       switch (schedulerPriority) {
         case ImmediateSchedulerPriority:

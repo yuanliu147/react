@@ -34,14 +34,14 @@ export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
 
 export function registerTwoPhaseEvent(
   registrationName: string,
-  dependencies: Array<DOMEventName>,
+  dependencies: Array<DOMEventName>, // 大写的事件名数组
 ): void {
   registerDirectEvent(registrationName, dependencies);
   registerDirectEvent(registrationName + 'Capture', dependencies);
 }
 
 export function registerDirectEvent(
-  registrationName: string,
+  registrationName: string, // on开头的事件名，onClick，
   dependencies: Array<DOMEventName>,
 ) {
   if (__DEV__) {
