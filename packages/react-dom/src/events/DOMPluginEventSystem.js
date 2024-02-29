@@ -443,6 +443,11 @@ function addTrappedEventListener(
     // the performance wins from the change. So we emulate
     // the existing behavior manually on the roots now.
     // https://github.com/facebook/react/issues/19651
+  /* 
+    浏览器引入了一种干预，使这些事件在默认情况下对文档是被动的。
+    React不再将它们绑定到文档，但现在更改它会使更改带来的性能优势付诸东流。
+    因此，我们现在在根上手动模拟现有行为。
+  */
     if (
       domEventName === 'touchstart' ||
       domEventName === 'touchmove' ||
@@ -469,16 +474,23 @@ function addTrappedEventListener(
   // browsers do not support this today, and given this is
   // to support legacy code patterns, it's likely they'll
   // need support for such browsers.
+/* 
+  当 legacyFBSupport 被启用时，它适用于我们想要向容器添加一次性事件侦听器的时候。
+  由于需要提供与内部 FB www 事件工具的兼容性，因此只能与enableLegacyFBSupport一起使用。
+  这是通过在事件侦听器被调用后立即删除它来实现的。
+  我们也可以尝试在addEventListener上使用 { once:true }参数，但这需要支持，
+  而一些浏览器目前不支持这一点，而且考虑到这是为了支持遗留代码模式，它们可能需要对此类浏览器的支持。
+*/
   if (enableLegacyFBSupport && isDeferredListenerForLegacyFBSupport) {
     const originalListener = listener;
-    listener = function(...p) {
+    listener = function(...p) { // 模拟只监听一次事件
       removeEventListener(
         targetContainer,
         domEventName,
         unsubscribeListener,
         isCapturePhaseListener,
       );
-      return originalListener.apply(this, p);
+      return originalListener.apply(this, p); // 这里 this 指向 window（undefined） ?
     };
   }
   // TODO: There are too many combinations here. Consolidate them.
