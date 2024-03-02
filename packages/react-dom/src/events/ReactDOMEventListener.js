@@ -183,6 +183,14 @@ function dispatchEventOriginal(
   // but now we use different bubble and capture handlers.
   // In eager mode, we attach capture listeners early, so we need
   // to filter them out until we fix the logic to handle them correctly.
+  
+  /*
+  TODO:重放捕获阶段事件当前已中断
+
+  因为我们过去常常在顶级的原生冒泡处理程序中进行，但现在我们使用不同的气泡和捕获处理程序。
+  在急切模式下，我们会提前附加捕获侦听器，因此我们需要过滤掉它们，直到我们修复了正确处理它们的逻辑。
+  */
+
   const allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
 
   if (
@@ -193,8 +201,9 @@ function dispatchEventOriginal(
     // If we already have a queue of discrete events, and this is another discrete
     // event, then we can't dispatch it regardless of its target, since they
     // need to dispatch in order.
+    // 如果我们已经有一个而离散事件队列，这是另一个离散的事件，那么无论其目标是什么，我们都无法调度它，因为它们需要按顺序调度。
     queueDiscreteEvent(
-      null, // Flags that we're not actually blocked on anything as far as we know.
+      null, // Flags that we're not actually blocked on anything as far as we know. 据我们所知，我们实际上没有在任何事情上被阻止的标志
       domEventName,
       eventSystemFlags,
       targetContainer,
@@ -352,6 +361,7 @@ export let return_targetInst = null;
 
 // Returns a SuspenseInstance or Container if it's blocked.
 // The return_targetInst field above is conceptually part of the return value.
+// 如果SuspendseInstance或Container被阻止，则返回它。上面的 return_targetIn 字段在概念上是返回值的一部分。
 export function findInstanceBlockingEvent(
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,

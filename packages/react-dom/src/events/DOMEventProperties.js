@@ -25,13 +25,13 @@ export const topLevelEventsToReactNames: Map<
 > = new Map();
 
 // NOTE: Capitalization is important in this list!
-//
+
 // E.g. it needs "pointerDown", not "pointerdown".
 // This is because we derive both React name ("onPointerDown")
 // and DOM name ("pointerdown") from the same list.
-//
+
 // Exceptions that don't match this convention are listed separately.
-//
+
 // prettier-ignore
 const simpleEventPluginEvents = [
   'abort',
