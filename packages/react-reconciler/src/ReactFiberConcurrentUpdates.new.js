@@ -42,6 +42,12 @@ type ConcurrentQueue = {
 // we wait until the current render is over (either finished or interrupted)
 // before adding it to the fiber/hook queue. Push to this array so we can
 // access the queue, fiber, update, et al later.
+
+/*
+  如果渲染正在进行中，并且我们收到来自并发事件的更新，我们将等待当前渲染结束（完成或中断），然后将其添加到 fiber/hook 队列。
+  push 到此阵列，以便我们稍后可以访问队列、光纤、更新等。
+*/
+
 const concurrentQueues: Array<any> = [];
 let concurrentQueuesIndex = 0;
 
@@ -94,6 +100,7 @@ function enqueueUpdate(
 ) {
   // Don't update the `childLanes` on the return path yet. If we already in
   // the middle of rendering, wait until after it has completed.
+  // 还不要更新 return path 上的“childLanes”。如果我们已经处于渲染过程中，请等到渲染完成后再进行渲染。
   concurrentQueues[concurrentQueuesIndex++] = fiber;
   concurrentQueues[concurrentQueuesIndex++] = queue;
   concurrentQueues[concurrentQueuesIndex++] = update;
@@ -103,6 +110,7 @@ function enqueueUpdate(
 
   // The fiber's `lane` field is used in some places to check if any work is
   // scheduled, to perform an eager bailout, so we need to update it immediately.
+  // 此 fiber 的 'lane' 字段被用于一些地方检查是否有任何工作被调度，以执行 eager bailout。因此我们需要立即更新它。
   // TODO: We should probably move this to the "shared" queue instead.
   fiber.lanes = mergeLanes(fiber.lanes, lane);
   const alternate = fiber.alternate;
@@ -139,13 +147,15 @@ export function enqueueConcurrentHookUpdateAndEagerlyBailout<S, A>(
 
 export function enqueueConcurrentClassUpdate<State>(
   fiber: Fiber,
-  queue: ClassQueue<State>,
+  queue: ClassQueue<State>, // sharedQueue
   update: ClassUpdate<State>,
   lane: Lane,
 ): FiberRoot | null {
   const concurrentQueue: ConcurrentQueue = (queue: any);
   const concurrentUpdate: ConcurrentUpdate = (update: any);
   enqueueUpdate(fiber, concurrentQueue, concurrentUpdate, lane);
+
+  // 返回 fiberRootNode
   return getRootForUpdatedFiber(fiber);
 }
 
@@ -213,6 +223,11 @@ function getRootForUpdatedFiber(sourceFiber: Fiber): FiberRoot | null {
   // deal because we would have to walk up the return path to set
   // the `childLanes`, anyway, but now those two traversals happen at
   // different times.
+/*
+当setState发生时，我们必须确保根被调度。
+因为更新队列没有指向根的后向指针，所以目前唯一的方法是沿着返回路径走。
+这在过去并不是什么大不了的事，因为无论如何，我们都必须沿着返回路径设置“childLanes”，但现在这两次穿越发生在不同的时间。
+*/
   // TODO: Consider adding a `root` backpointer on the update queue.
   detectUpdateOnUnmountedFiber(sourceFiber, sourceFiber);
   let node = sourceFiber;

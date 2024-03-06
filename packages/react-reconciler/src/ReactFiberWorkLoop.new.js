@@ -294,7 +294,7 @@ let workInProgressRootRenderLanes: Lanes = NoLanes;
 
 // Most things in the work loop should deal with workInProgressRootRenderLanes.
 // Most things in begin/complete phases should deal with subtreeRenderLanes.
-/* 
+/*
 允许组件更改其子树的渲染通道的堆栈这是我们从根开始处理的通道的超集。
 它与“workInProgressRootRenderLanes”不同的唯一情况是，当我们输入一个隐藏且需要取消隐藏的子树时：Suspense和Offscreen组件。
 
@@ -315,7 +315,7 @@ let workInProgressRootFatalError: mixed = null;
 // slightly different than `renderLanes` because `renderLanes` can change as you
 // enter and exit an Offscreen tree. This value is the combination of all render
 // lanes for the entire render phase.
-/* 
+/*
 “Included”车道是指在此渲染过程中使用的车道。
 它与“renderLanes”略有不同，因为“renderLanes”可以在进入和退出屏幕外树时更改。
 
@@ -449,16 +449,21 @@ export function getWorkInProgressRootRenderLanes(): Lanes {
 }
 
 export function requestEventTime() {
+  // now() => 从页面渲染以来的时间戳。
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
+    // 我们正在使用 react，因此读取实际时间是可以的。
     return now();
   }
   // We're not inside React, so we may be in the middle of a browser event.
+  // 我们不在 react 内部，所以我们可能处于浏览器事件的中间。
   if (currentEventTime !== NoTimestamp) {
     // Use the same start time for all updates until we enter React again.
+    // 在我们再次进入 react 之前，使用相同的起始时间进行所有更新。
     return currentEventTime;
   }
   // This is the first update since React yielded. Compute a new start time.
+  // 这是 react 开始以来第一次更新。计算一个新的时间。
   currentEventTime = now();
   return currentEventTime;
 }
@@ -470,6 +475,7 @@ export function getCurrentTime() {
 export function requestUpdateLane(fiber: Fiber): Lane {
   // Special cases
   const mode = fiber.mode;
+  // 非 并发模式，同步车道
   if ((mode & ConcurrentMode) === NoMode) {
     return (SyncLane: Lane);
   } else if (
@@ -486,7 +492,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     // This behavior is only a fallback. The flag only exists until we can roll
     // out the setState warning, since existing code might accidentally rely on
     // the current behavior.
-    /* 
+    /*
 这是渲染阶段更新。这些都没有得到官方支持。
 旧的行为是为其提供与当前渲染的内容相同的“线程”（通道）。
 因此，如果您对稍后在同一渲染中发生的组件调用“setState”，它将刷新。
@@ -524,18 +530,20 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
   // Updates originating inside certain React methods, like flushSync, have
   // their priority set by tracking it with a context variable.
-  
+
   // The opaque type returned by the host config is internally a lane, so we can
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
 
-/* 
+  /*
   源自某些React方法内部的更新，如flushSync，通过使用上下文变量跟踪它来设置优先级。
 
   主机配置返回的不透明类型在内部是一个通道，所以我们可以直接使用它。
 
   TODO:将此类型转换移动到事件优先级模块。
 */
+
+  // 第一次渲染时 updateLane === NoLane
   const updateLane: Lane = (getCurrentUpdatePriority(): any);
   if (updateLane !== NoLane) {
     return updateLane;
@@ -543,12 +551,12 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
   // This update originated outside React. Ask the host environment for an
   // appropriate priority, based on the type of event.
-  
+
   // The opaque type returned by the host config is internally a lane, so we can
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
 
-/* 
+  /*
   此更新源自React之外。根据事件类型，向宿主环境询问适当的优先级。
 
   主机配置返回的不透明类型在内部是一个通道，所以我们可以直接使用它。
@@ -557,6 +565,17 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 */
 
   // 初始情况 返回 DefaultEventPriority => DefaultLane
+
+  /*
+  export function getCurrentEventPriority() {
+    const currentEvent = window.event;
+    if (currentEvent === undefined) {
+      return DefaultEventPriority;
+    }
+    return getEventPriority(currentEvent.type);
+  }
+*/
+
   const eventLane: Lane = (getCurrentEventPriority(): any);
   return eventLane;
 }

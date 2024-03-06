@@ -261,6 +261,7 @@ export function enqueueUpdate<State>(
     // currently renderings (a pattern that is accompanied by a warning).
     return unsafe_markUpdateLaneFromFiberToRoot(fiber, lane);
   } else {
+    // fiber => hostRootFiber
     return enqueueConcurrentClassUpdate(fiber, sharedQueue, update, lane);
   }
 }

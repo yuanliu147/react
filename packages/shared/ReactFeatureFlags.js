@@ -157,7 +157,7 @@ export const allowConcurrentByDefault = false;
 // interleaved event. Remove this flag once we have migrated to the
 // new behavior.
 // NOTE: Not sure if we'll end up doing this or not.
-/* 
+/*
 在渲染阶段发生的更新不受官方支持。
 但当它们确实发生时，我们会通过选择当前未渲染的通道将它们推迟到后续渲染。
 我们将它们视为来自交错事件。一旦我们迁移到新的行为，请删除此标志。
@@ -226,6 +226,7 @@ export const warnAboutStringRefs = false;
 
 // Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
 // for an experimental timeline tool.
+// 为实验时间线工具添加用户时间标记，例如状态更新、悬念和工作循环。
 export const enableSchedulingProfiler = __PROFILE__;
 
 // Helps identify side effects in render-phase lifecycle hooks and setState

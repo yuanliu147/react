@@ -12,10 +12,9 @@ import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracing
 type BatchConfig = {
   transition: BatchConfigTransition | null,
 };
-/**
- * Keeps track of the current batch's configuration such as how long an update
- * should suspend for if it needs to.
- */
+
+// Keeps track of the current batch's configuration such as how long an update should suspend for if it needs to.
+// 这个功能会跟踪当前批次的配置，例如如果需要的话，更新应该暂停多长时间。
 const ReactCurrentBatchConfig: BatchConfig = {
   transition: null,
 };

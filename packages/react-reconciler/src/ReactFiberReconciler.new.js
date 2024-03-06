@@ -318,12 +318,12 @@ export function createHydrationContainer(
   return root;
 }
 /**
- * 
+ *
  * @param {*} element 需要挂载的组件，<App />
  * @param {*} container FiberRootNode
- * @param {*} parentComponent 
- * @param {*} callback 
- * @returns 
+ * @param {*} parentComponent
+ * @param {*} callback
+ * @returns
  */
 export function updateContainer(
   element: ReactNodeList,
@@ -334,10 +334,11 @@ export function updateContainer(
   if (__DEV__) {
     onScheduleRoot(container, element);
   }
+  // hostRootFiber
   const current = container.current;
   // 初始化时，eventTime = Date.now()
   const eventTime = requestEventTime();
-  // 初始化时，defaultLine
+  // 初始化时，defaultLine = 16
   const lane = requestUpdateLane(current);
 
   if (enableSchedulingProfiler) {
@@ -373,7 +374,8 @@ export function updateContainer(
   const update = createUpdate(eventTime, lane);
   // Caution: React DevTools currently depends on this property
   // being called "element".
-  update.payload = {element};
+  // 注意：React DevTools 当前依赖于称为 “element” 的属性。
+  update.payload = {element}; 
 
   callback = callback === undefined ? null : callback;
   if (callback !== null) {
