@@ -186,6 +186,7 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
 
 export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // Early bailout if there's no pending work left.
+  // 初始情况下，pendingLanes 应该为 DefaultLine(16)
   const pendingLanes = root.pendingLanes;
   if (pendingLanes === NoLanes) {
     return NoLanes;
@@ -198,6 +199,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
 
   // Do not work on any idle work until all the non-idle work has finished,
   // even if the work is suspended.
+  // 在所有非空闲工作完成之前，不要进行任何空闲工作，即使工作已暂停。
   const nonIdlePendingLanes = pendingLanes & NonIdleLanes;
   if (nonIdlePendingLanes !== NoLanes) {
     const nonIdleUnblockedLanes = nonIdlePendingLanes & ~suspendedLanes;
@@ -263,31 +265,51 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     // and default updates, so they render in the same batch. The only reason
     // they use separate lanes is because continuous updates should interrupt
     // transitions, but default updates should not.
+    // 当更新默认同步时，我们会将连续优先级更新和默认更新纠缠在一起，因此它们会在同一批中渲染。
+    // 它们使用单独通道的唯一原因是，连续更新应该中断转换，但默认更新不应该。
     nextLanes |= pendingLanes & DefaultLane;
   }
 
   // Check for entangled lanes and add them to the batch.
-  //
+
   // A lane is said to be entangled with another when it's not allowed to render
   // in a batch that does not also include the other lane. Typically we do this
   // when multiple updates have the same source, and we only want to respond to
   // the most recent event from that source.
-  //
+
   // Note that we apply entanglements *after* checking for partial work above.
   // This means that if a lane is entangled during an interleaved event while
   // it's already rendering, we won't interrupt it. This is intentional, since
   // entanglement is usually "best effort": we'll try our best to render the
   // lanes in the same batch, but it's not worth throwing out partially
   // completed work in order to do it.
+  /*
+检查是否有缠绕的通道，并将它们添加到批次中。
+
+当不允许在不包括另一个车道的批中渲染时，称一个车道与另一个交织在一起。
+通常，当多个更新具有相同的源，并且我们只想响应该源的最新事件时，我们会执行此操作。
+
+请注意，我们在检查上述部分功之后应用纠缠。
+这意味着，如果车道在交错事件中纠缠，而它已经在渲染，我们不会打断它。
+这是故意的，因为纠缠通常是“尽最大努力”：我们会尽最大努力在同一批中渲染车道，但不值得为了渲染而放弃部分完成的工作。
+
+*/
   // TODO: Reconsider this. The counter-argument is that the partial work
   // represents an intermediate state, which we don't want to show to the user.
   // And by spending extra time finishing it, we're increasing the amount of
   // time it takes to show the final state, which is what they are actually
   // waiting for.
-  //
+
   // For those exceptions where entanglement is semantically important, like
   // useMutableSource, we should ensure that there is no partial work at the
   // time we apply the entanglement.
+/*
+表示一个中间状态，我们不想向用户显示它。
+通过花额外的时间完成它，我们增加了显示最终状态所需的时间，这正是他们真正等待的。
+
+对于那些纠缠在语义上很重要的例外，
+比如 useMutableSource，我们应该确保在应用纠缠时没有部分功。
+*/
   const entangledLanes = root.entangledLanes;
   if (entangledLanes !== NoLanes) {
     const entanglements = root.entanglements;
@@ -330,7 +352,7 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
     case InputContinuousHydrationLane:
     case InputContinuousLane:
       // User interactions should expire slightly more quickly.
-      //
+
       // NOTE: This is set to the corresponding constant as in Scheduler.js.
       // When we made it larger, a product metric in www regressed, suggesting
       // there's a user interaction that's being starved by a series of
@@ -338,6 +360,17 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
       // to fix the starvation. However, this scenario supports the idea that
       // expiration times are an important safeguard when starvation
       // does happen.
+      /*
+用户交互到期的速度应该稍快一些。
+
+
+
+注意：这被设置为Scheduler.js中的相应常量。
+
+当我们把它做得更大时，www中的产品指标回归了，这表明用户交互正被一系列同步更新所匮乏。
+如果这个理论是正确的，正确的解决方案就是解决饥饿问题。
+然而，这种情况支持了这样一种观点，即当饥饿确实发生时，保质期是一个重要的保障。
+*/
       return currentTime + 250;
     case DefaultHydrationLane:
     case DefaultLane:
@@ -391,9 +424,10 @@ export function markStarvedLanesAsExpired(
   currentTime: number,
 ): void {
   // TODO: This gets called every time we yield. We can optimize by storing
+  // TODO: 每次我们屈服时都会调用此命令。我们可以通过存储进行优化
   // the earliest expiration time on the root. Then use that to quickly bail out
   // of this function.
-
+  // 根上最早的过期时间。然后使用它快速退出此功能。
   const pendingLanes = root.pendingLanes;
   const suspendedLanes = root.suspendedLanes;
   const pingedLanes = root.pingedLanes;
@@ -402,6 +436,8 @@ export function markStarvedLanesAsExpired(
   // Iterate through the pending lanes and check if we've reached their
   // expiration time. If so, we'll assume the update is being starved and mark
   // it as expired to force it to finish.
+  // 遍历待处理的 lanes，检查我们是否已达到它们的到期时间。
+  // 如果是这样的话，我们将假设更新正在被耗尽，并将其标记为过期以强制完成。
   let lanes = pendingLanes;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);
@@ -412,6 +448,8 @@ export function markStarvedLanesAsExpired(
       // Found a pending lane with no expiration time. If it's not suspended, or
       // if it's pinged, assume it's CPU-bound. Compute a new expiration time
       // using the current time.
+      // 找到一个没有过期时间的 pending lane。
+      // 如果它没有 suspended，或者它被 pinged，那么假设它是 CPU 绑定的。使用当前时间计算新的过期时间。
       if (
         (lane & suspendedLanes) === NoLanes ||
         (lane & pingedLanes) !== NoLanes

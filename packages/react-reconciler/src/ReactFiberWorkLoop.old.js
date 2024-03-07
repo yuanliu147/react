@@ -698,6 +698,7 @@ export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber) {
 
 每次更新时以及退出任务之前都会调用此函数。
 */
+// fiberRootNode
 function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   const existingCallbackNode = root.callbackNode;
 
@@ -707,6 +708,8 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   markStarvedLanesAsExpired(root, currentTime);
 
   // Determine the next lanes to work on, and their priority.
+  // 确定接下来要处理的车道及其优先级。初始情况为 DefaultLane(16)
+  // !~注意：这里是 nextLanes.也就是说有可能是一批优先级。
   const nextLanes = getNextLanes(
     root,
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
@@ -723,9 +726,11 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   }
 
   // We use the highest priority lane to represent the priority of the callback.
+  // 我们使用最高优先级通道来表示回调的优先级。
   const newCallbackPriority = getHighestPriorityLane(nextLanes);
 
   // Check if there's an existing task. We may be able to reuse it.
+  // 检查是否存在现有任务。我们也许可以重复使用它。
   const existingCallbackPriority = root.callbackPriority;
   if (
     existingCallbackPriority === newCallbackPriority &&
@@ -757,6 +762,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   if (existingCallbackNode != null) {
     // Cancel the existing callback. We'll schedule a new one below.
+    // 取消现有的回调。我们将在下面安排一个新的。
     cancelCallback(existingCallbackNode);
   }
 
@@ -810,6 +816,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       case ContinuousEventPriority:
         schedulerPriorityLevel = UserBlockingSchedulerPriority;
         break;
+        // DefaultLane 对应 DefaultEventPriority
       case DefaultEventPriority:
         schedulerPriorityLevel = NormalSchedulerPriority;
         break;
