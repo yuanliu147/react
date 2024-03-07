@@ -27,6 +27,10 @@ import {HostRoot} from './ReactWorkTags';
 // render. When this render exits, either because it finishes or because it is
 // interrupted, the interleaved updates will be transferred onto the main part
 // of the queue.
+/*
+  在当前渲染期间接收更新的所有更新队列的数组。
+  当此渲染退出时，无论是因为它完成还是因为它被中断，interleaved update都将传输到队列的主要部分。
+*/
 let concurrentQueues: Array<
   HookQueue<any, any> | ClassQueue<any>,
 > | null = null;
@@ -122,6 +126,7 @@ export function enqueueConcurrentClassUpdate<State>(
     update.next = update;
     // At the end of the current render, this queue's interleaved updates will
     // be transferred to the pending queue.
+    // 在当前渲染结束时，此队列的 interleaved updates 将传输到挂起的队列
     pushConcurrentUpdateQueue(queue);
   } else {
     update.next = interleaved.next;

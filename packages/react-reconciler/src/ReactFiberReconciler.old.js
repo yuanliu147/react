@@ -378,8 +378,10 @@ export function updateContainer(
     update.callback = callback;
   }
 
+  // root 为 fiberRootNode 
   const root = enqueueUpdate(current, update, lane);
   if (root !== null) {
+    // fiberRootNode, hostRootFiber, DefaultLane(16), 页面加载以来的时间戳
     scheduleUpdateOnFiber(root, current, lane, eventTime);
     entangleTransitions(root, current, lane);
   }

@@ -525,6 +525,7 @@ function requestRetryLane(fiber: Fiber) {
   return claimNextRetryLane();
 }
 
+// fiberRootNode, hostRootFiber, DefaultLane(16), 页面加载以来的时间戳
 export function scheduleUpdateOnFiber(
   root: FiberRoot,
   fiber: Fiber,
@@ -546,6 +547,7 @@ export function scheduleUpdateOnFiber(
   }
 
   // Mark that the root has a pending update.
+  // 标记 root 有挂起的更新
   markRootUpdated(root, lane, eventTime);
 
   if (
@@ -567,6 +569,7 @@ export function scheduleUpdateOnFiber(
   } else {
     // This is a normal update, scheduled from outside the render phase. For
     // example, during an input event.
+    // 这是从渲染阶段之外安排的正常更新。例如，在输入事件期间。
     if (enableUpdaterTracking) {
       if (isDevToolsPresent) {
         addFiberToLanesMap(root, fiber, lane);
@@ -688,11 +691,19 @@ export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber) {
 // of the existing task is the same as the priority of the next level that the
 // root has work on. This function is called on every update, and right before
 // exiting a task.
+/*
+使用此 function 可以为 fiberRootNode 调度一个任务。
+每个 root 只有一个任务；
+如果已经安排了任务，我们将检查以确保现有任务的优先级与 root 用户处理的下一级别的优先级相同。
+
+每次更新时以及退出任务之前都会调用此函数。
+*/
 function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   const existingCallbackNode = root.callbackNode;
 
   // Check if any lanes are being starved by other work. If so, mark them as
   // expired so we know to work on those next.
+  // 检查是否有车道被其他工作占用。如果是，请将其标记为已过期，以便我们知道下一步要处理这些车道。
   markStarvedLanesAsExpired(root, currentTime);
 
   // Determine the next lanes to work on, and their priority.

@@ -599,6 +599,7 @@ export function markRootUpdated(
   const index = laneToIndex(updateLane);
   // We can always overwrite an existing timestamp because we prefer the most
   // recent event, and we assume time is monotonically increasing.
+  // 我们总是可以覆盖现有的时间戳，因为我们更倾向于最近的事件，并且我们假设时间是单调增加的。
   eventTimes[index] = eventTime;
 }
 
