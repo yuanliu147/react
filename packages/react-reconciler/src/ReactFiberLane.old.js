@@ -514,6 +514,7 @@ export function includesBlockingLane(root: FiberRoot, lanes: Lanes) {
     InputContinuousLane |
     DefaultHydrationLane |
     DefaultLane;
+  // DefaultLane 也在？
   return (lanes & SyncDefaultLanes) !== NoLanes;
 }
 

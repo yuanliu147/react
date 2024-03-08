@@ -839,6 +839,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
 // This is the entry point for every concurrent task, i.e. anything that
 // goes through Scheduler.
+// 这是每个并发任务的入口点，即通过Scheduler的任何任务。
 function performConcurrentWorkOnRoot(root, didTimeout) {
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     resetNestedUpdateFlag();
@@ -846,6 +847,8 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 
   // Since we know we're in a React event, we can clear the current
   // event time. The next update will compute a new event time.
+  // 由于我们知道自己处于React事件中，因此可以清除当前事件时间。
+  // 下一次更新将计算新的事件时间。
   currentEventTime = NoTimestamp;
   currentEventTransitionLane = NoLanes;
 
@@ -855,6 +858,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 
   // Flush any pending passive effects before deciding which lanes to work on,
   // in case they schedule additional work.
+  // 在决定要处理哪些车道之前，清除任何挂起的被动效果，以防它们安排额外的工作。
   const originalCallbackNode = root.callbackNode;
   const didFlushPassiveEffects = flushPassiveEffects();
   if (didFlushPassiveEffects) {
@@ -872,12 +876,14 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 
   // Determine the next lanes to work on, using the fields stored
   // on the root.
+  // 使用存储在根目录上的字段，确定下一个要处理的通道。
   let lanes = getNextLanes(
     root,
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
   );
   if (lanes === NoLanes) {
     // Defensive coding. This is never expected to happen.
+    // 防御性编码。这是不可能发生的。
     return null;
   }
 
@@ -887,10 +893,18 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   // TODO: We only check `didTimeout` defensively, to account for a Scheduler
   // bug we're still investigating. Once the bug in Scheduler is fixed,
   // we can remove this, since we track expiration ourselves.
+/*
+  在某些情况下，我们禁用时间切片：如果工作被 CPU绑定 的时间太长（“过期”工作，以防止饥饿），或者我们在默认模式下处于同步更新。
+
+  我们只是防御性地检查“didTimeout”，以解释我们仍在调查的 Scheduler 错误。
+  一旦修复了 Scheduler 中的错误，我们就可以删除它，因为我们自己跟踪过期时间。
+*/
+
   const shouldTimeSlice =
     !includesBlockingLane(root, lanes) &&
     !includesExpiredLane(root, lanes) &&
     (disableSchedulerTimeoutInWorkLoop || !didTimeout);
+  // 默认 shouldTimeSlice 为 false，因为 初始 lanes 为 DefaultLane (16)
   let exitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes);
@@ -1680,6 +1694,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
 
   // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
+  // 如果 root 或 lanes 发生了变化，则丢弃现有堆栈并准备新的堆栈。否则，我们将继续原来的做法。
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes) {
     if (enableUpdaterTracking) {
       if (isDevToolsPresent) {
@@ -1693,6 +1708,13 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
         // If we bailout on this work, we'll move them back (like above).
         // It's important to move them now in case the work spawns more work at the same priority with different updaters.
         // That way we can keep the current update and future updates separate.
+/*
+此时，将安排即将进行的工作的 Fibers 从 Map 移动到 Set。
+如果我们 bailout on this work，我们将把它们移回来（如上所述）。
+现在移动它们很重要，以防工作在不同的更新程序中以相同的优先级产生更多的工作。
+这样我们就可以将当前更新和未来更新分开。
+
+*/
         movePendingFibersToMemoized(root, lanes);
       }
     }
@@ -2378,9 +2400,19 @@ export function flushPassiveEffects(): boolean {
   // in the first place because we used to wrap it with
   // `Scheduler.runWithPriority`, which accepts a function. But now we track the
   // priority within React itself, so we can mutate the variable directly.
+/*
+返回是否刷新了被动效果。
+
+TODO:将此检查与flushPassiveEFfectsImpl中的检查合并。
+
+我们也许应该把这两个函数结合起来。
+我相信它们最初只是分开的，因为我们过去用“Scheduler.runWithPriority”来包装它，它接受一个函数。
+但现在我们在React本身中跟踪优先级，这样我们就可以直接对变量进行变异。
+*/
   if (rootWithPendingPassiveEffects !== null) {
     // Cache the root since rootWithPendingPassiveEffects is cleared in
     // flushPassiveEffectsImpl
+    // 缓存根，因为 rootWithPendingPassiveEffects 在 flushPassiveEffectsImpl 中被清除
     const root = rootWithPendingPassiveEffects;
     // Cache and clear the remaining lanes flag; it must be reset since this
     // method can be called from various places, not always from commitRoot
