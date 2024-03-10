@@ -370,7 +370,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
   if (enableProfiling) {
     newTask.isQueued = false;
   }
-  
+
   // 存在 delay，延期任务
   if (startTime > currentTime) {
     // This is a delayed task.

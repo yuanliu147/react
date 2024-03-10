@@ -185,6 +185,7 @@ export function cloneUpdateQueue<State>(
   workInProgress: Fiber,
 ): void {
   // Clone the update queue from current. Unless it's already a clone.
+  // 从 current 克隆更新队列。除非它已经是一个克隆。
   const queue: UpdateQueue<State> = (workInProgress.updateQueue: any);
   const currentQueue: UpdateQueue<State> = (current.updateQueue: any);
   if (queue === currentQueue) {

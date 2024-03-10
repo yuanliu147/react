@@ -816,7 +816,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       case ContinuousEventPriority:
         schedulerPriorityLevel = UserBlockingSchedulerPriority;
         break;
-        // DefaultLane 对应 DefaultEventPriority
+      // DefaultLane 对应 DefaultEventPriority
       case DefaultEventPriority:
         schedulerPriorityLevel = NormalSchedulerPriority;
         break;
@@ -893,7 +893,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   // TODO: We only check `didTimeout` defensively, to account for a Scheduler
   // bug we're still investigating. Once the bug in Scheduler is fixed,
   // we can remove this, since we track expiration ourselves.
-/*
+  /*
   在某些情况下，我们禁用时间切片：如果工作被 CPU绑定 的时间太长（“过期”工作，以防止饥饿），或者我们在默认模式下处于同步更新。
 
   我们只是防御性地检查“didTimeout”，以解释我们仍在调查的 Scheduler 错误。
@@ -904,10 +904,12 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     !includesBlockingLane(root, lanes) &&
     !includesExpiredLane(root, lanes) &&
     (disableSchedulerTimeoutInWorkLoop || !didTimeout);
+
   // 默认 shouldTimeSlice 为 false，因为 初始 lanes 为 DefaultLane (16)
   let exitStatus = shouldTimeSlice
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes);
+
   if (exitStatus !== RootInProgress) {
     if (exitStatus === RootErrored) {
       // If something threw an error, try rendering one more time. We'll
@@ -1483,6 +1485,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   if (timeoutHandle !== noTimeout) {
     // The root previous suspended and scheduled a timeout to commit a fallback
     // state. Now that we have additional work, cancel the timeout.
+    // 根先前已挂起并计划了一个超时以提交回退状态。现在我们有额外的工作，取消超时。
     root.timeoutHandle = noTimeout;
     // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
     cancelTimeout(timeoutHandle);
@@ -1614,6 +1617,7 @@ function pushDispatcher() {
     // The React isomorphic package does not include a default dispatcher.
     // Instead the first renderer will lazily attach one, in order to give
     // nicer error messages.
+    // React 同构包 不包括默认的调度器。相反，第一个渲染器将延迟附加一个，以便提供更好的错误消息。
     return ContextOnlyDispatcher;
   } else {
     return prevDispatcher;
@@ -1690,6 +1694,7 @@ export function renderHasNotSuspendedYet(): boolean {
 function renderRootSync(root: FiberRoot, lanes: Lanes) {
   const prevExecutionContext = executionContext;
   executionContext |= RenderContext;
+  // hooks 相关？
   const prevDispatcher = pushDispatcher();
 
   // If the root or lanes have changed, throw out the existing stack
@@ -1708,11 +1713,13 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
         // If we bailout on this work, we'll move them back (like above).
         // It's important to move them now in case the work spawns more work at the same priority with different updaters.
         // That way we can keep the current update and future updates separate.
-/*
+        /*
 此时，将安排即将进行的工作的 Fibers 从 Map 移动到 Set。
 如果我们 bailout on this work，我们将把它们移回来（如上所述）。
 现在移动它们很重要，以防工作在不同的更新程序中以相同的优先级产生更多的工作。
 这样我们就可以将当前更新和未来更新分开。
+
+root.pendingUpdatersLaneMap => root.memoizedUpdaters
 
 */
         movePendingFibersToMemoized(root, lanes);
@@ -2400,7 +2407,7 @@ export function flushPassiveEffects(): boolean {
   // in the first place because we used to wrap it with
   // `Scheduler.runWithPriority`, which accepts a function. But now we track the
   // priority within React itself, so we can mutate the variable directly.
-/*
+  /*
 返回是否刷新了被动效果。
 
 TODO:将此检查与flushPassiveEFfectsImpl中的检查合并。
@@ -2984,9 +2991,17 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     // If a component throws an error, we replay it again in a synchronously
     // dispatched event, so that the debugger will treat it as an uncaught
     // error See ReactErrorUtils for more information.
+/*
+    如果组件抛出错误，我们将在 同步调度 中重新调度事件，这样调试器将把它视为未捕获的错误。
+    有关详细信息，请参阅 ReactErrorUtils。
+*/
 
     // Before entering the begin phase, copy the work-in-progress onto a dummy
     // fiber. If beginWork throws, we'll use this to reset the state.
+/*
+    在进入开始阶段之前，将正在进行的工作复制到一个虚拟 fibers。
+    如果 beginWork 抛出错误，我们将使用这个来重置状态。
+*/
     const originalWorkInProgressCopy = assignFiberPropertiesInDEV(
       dummyFiber,
       unitOfWork,

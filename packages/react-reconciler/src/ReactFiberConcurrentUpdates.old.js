@@ -51,6 +51,11 @@ export function finishQueueingConcurrentUpdates() {
   // point to the last node in a circular linked list. We need to append the
   // interleaved list to the end of the pending list by joining them into a
   // single, circular list.
+/*
+  将 interleaved updates 传输到 main queue 上。每一个队列 都有 'pending' 和 'interleaved' 字段。
+  当它们不为空时，它们指向一个循环链表的最后一个节点。 我们需要将 interleaved list 追加到 pending list 的末尾，
+  将它们连接成一个循环列表。
+*/
   if (concurrentQueues !== null) {
     for (let i = 0; i < concurrentQueues.length; i++) {
       const queue = concurrentQueues[i];
@@ -59,6 +64,7 @@ export function finishQueueingConcurrentUpdates() {
         queue.interleaved = null;
         const firstInterleavedUpdate = lastInterleavedUpdate.next;
         const lastPendingUpdate = queue.pending;
+        // 初始情况下 pending 就是 null.
         if (lastPendingUpdate !== null) {
           const firstPendingUpdate = lastPendingUpdate.next;
           lastPendingUpdate.next = (firstInterleavedUpdate: any);

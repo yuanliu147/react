@@ -3459,6 +3459,7 @@ function checkScheduledUpdateOrContext(
 ): boolean {
   // Before performing an early bailout, we must check if there are pending
   // updates or context.
+  // 在进行 early bailout 之前，我们必须检查是否有 pending updates 或 context。
   const updateLanes = current.lanes;
   if (includesSomeLane(updateLanes, renderLanes)) {
     return true;
@@ -3509,7 +3510,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       break;
     case ContextProvider: {
       const newValue = workInProgress.memoizedProps.value;
-      const context: ReactContext<any> = workInProgress.type._context;
+      const context: ReactContext<> = workInProgress.type._context;
       pushProvider(workInProgress, context, newValue);
       break;
     }
@@ -3685,7 +3686,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderLanes: Lanes,
+  renderLanes: Lanes, // subtreeRenderLanes
 ): Fiber | null {
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {
@@ -3721,6 +3722,7 @@ function beginWork(
     } else {
       // Neither props nor legacy context changes. Check if there's a pending
       // update or context change.
+      // props 和 legacy context 都没有发生改变，检查 pending update 或者 context 是否发生了变化
       const hasScheduledUpdateOrContext = checkScheduledUpdateOrContext(
         current,
         renderLanes,
@@ -3748,6 +3750,13 @@ function beginWork(
         // nor legacy context. Set this to false. If an update queue or context
         // consumer produces a changed value, it will set this to true. Otherwise,
         // the component will assume the children have not changed and bail out.
+
+/*
+   已计划在此 fiber 上更新，但是没有 new props 或 legacy context。
+   将此设置为 false。如果 update queue 或 context 消费者产生更改的值，它将设置此为 true。
+   否则，该组件将假定子节点没有改变并立即退出。
+*/
+
         didReceiveUpdate = false;
       }
     }
@@ -3771,10 +3780,18 @@ function beginWork(
   }
 
   // Before entering the begin phase, clear pending update priority.
+  // 在进入 begin 阶段，清除挂起更新优先级。
   // TODO: This assumes that we're about to evaluate the component and process
   // the update queue. However, there's an exception: SimpleMemoComponent
   // sometimes bails out later in the begin phase. This indicates that we should
   // move this assignment out of the common path and into each branch.
+
+/*
+这假设我们要评估组件并处理更新队列。
+然而，有一个例外：SimpleMemoComponent 有时会在开始阶段稍后退出。
+这表明我们应该将此赋值从公共路径移到每个分支中。
+*/
+
   workInProgress.lanes = NoLanes;
 
   switch (workInProgress.tag) {
