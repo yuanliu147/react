@@ -309,6 +309,14 @@ export function reconcileChildren(
 
     // If we had any progressed work already, that is invalid at this point so
     // let's throw it out.
+
+/*
+如果 current child 与正在进行的工作相同，则意味着我们尚未开始对这些孩子进行任何工作。
+因此，我们使用克隆算法来创建所有当前子项的副本。
+
+如果我们已经有任何进展的工作，在这一点上是无效的，所以让我们把它扔掉。
+*/
+
     workInProgress.child = reconcileChildFibers(
       workInProgress,
       current.child,
@@ -1303,7 +1311,11 @@ function updateHostRoot(current, workInProgress, renderLanes) {
 
   // Caution: React DevTools currently depends on this property
   // being called "element".
+  // 注意：React DevTools 当前依赖于称为“元素”的属性。
+
   const nextChildren = nextState.element;
+
+
   if (supportsHydration && prevState.isDehydrated) {
     // This is a hydration root whose shell has not yet hydrated. We should
     // attempt to hydrate.
@@ -1367,6 +1379,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
             const mutableSource = ((mutableSourceEagerHydrationData[
               i
             ]: any): MutableSource<any>);
+
             const version = mutableSourceEagerHydrationData[i + 1];
             setWorkInProgressVersion(mutableSource, version);
           }
@@ -1446,6 +1459,13 @@ function updateHostComponent(
     // case. We won't handle it as a reified child. We will instead handle
     // this in the host environment that also has access to this prop. That
     // avoids allocating another HostText fiber and traversing it.
+
+/*
+我们对主机节点的直接文本子节点进行特殊处理。
+这是一种常见的情况。我们不会把它当作一个具体化的孩子来处理。
+相反，我们将在同样可以访问此主机环境中的 props 处理此问题。这样可以避免分配另一个HostText光纤并遍历它。
+*/
+
     nextChildren = null;
   } else if (prevProps !== null && shouldSetTextContent(type, prevProps)) {
     // If we're switching from a direct text child to a normal child, or to
@@ -3682,7 +3702,11 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
   }
   return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
 }
-
+/**
+ * 目标是根据新虚拟DOM构建新的fiber子链表
+ *
+ *
+*/
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,

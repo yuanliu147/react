@@ -512,6 +512,8 @@ export function processUpdateQueue<State>(
     }
   }
 
+  // 此时，current 和 workInProgress 的 updateQueue 的 firstBaseUpdate 和 lastBaseUpdate 都作为同一个链表的第一个和最后一个节点。
+
   // These values may change as we process the queue.
   if (firstBaseUpdate !== null) {
     // Iterate through the list of updates to compute the result.
@@ -579,6 +581,7 @@ export function processUpdateQueue<State>(
           props,
           instance,
         );
+        // 初始情况，就相当于更新了 memoizedState 中的 element 指向了即将渲染的 html 标签
         const callback = update.callback;
         if (
           callback !== null &&
@@ -603,6 +606,7 @@ export function processUpdateQueue<State>(
         } else {
           // An update was scheduled from inside a reducer. Add the new
           // pending updates to the end of the list and keep processing.
+          // 已计划从减速器内部进行更新。将新的挂起更新添加到列表的末尾并继续处理。
           const lastPendingUpdate = pendingQueue;
           // Intentionally unsound. Pending updates form a circular list, but we
           // unravel them when transferring them to the base queue.
@@ -636,6 +640,7 @@ export function processUpdateQueue<State>(
     } else if (firstBaseUpdate === null) {
       // `queue.lanes` is used for entangling transitions. We can set it back to
       // zero once the queue is empty.
+      // `queue.lanes’用于纠缠转换。一旦队列为空，我们就可以将其设置回零。
       queue.shared.lanes = NoLanes;
     }
 
@@ -646,6 +651,12 @@ export function processUpdateQueue<State>(
     // dealt with the props. Context in components that specify
     // shouldComponentUpdate is tricky; but we'll have to account for
     // that regardless.
+    /*
+ 将剩余到期时间设置为队列中剩余的时间。
+ 这应该很好，因为只有 props 和 context 这两个因素会导致过期时间。
+ 当我们开始处理队列时，我们已经处于开始阶段的中间，所以我们已经处理了 props。
+ 指定 shouldComponentUpdate 的组件中的 context 很棘手；但不管怎样，我们都必须考虑到这一点。
+*/
     markSkippedUpdateLanes(newLanes);
     workInProgress.lanes = newLanes;
     workInProgress.memoizedState = newState;

@@ -262,6 +262,13 @@ function resolveLazy(lazyType) {
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
+
+/*
+之所以存在这个包装器函数，是因为我希望克隆每个路径中的代码，以便能够通过早期分支来单独优化每个路径。
+这需要一个编译器，或者我们可以手动完成。不需要这个分支的帮助者生活在这个功能之外。
+*/
+
+// shouldTrackSideEffects 是否跟踪副作用
 function ChildReconciler(shouldTrackSideEffects) {
   function deleteChild(returnFiber: Fiber, childToDelete: Fiber): void {
     if (!shouldTrackSideEffects) {
@@ -359,7 +366,9 @@ function ChildReconciler(shouldTrackSideEffects) {
   function placeSingleChild(newFiber: Fiber): Fiber {
     // This is simpler for the single child case. We only need to do a
     // placement for inserting new children.
+    // 这对于独生子女的情况更简单。我们只需要做一个插入新孩子的位置。
     if (shouldTrackSideEffects && newFiber.alternate === null) {
+      // 在最后的 commit 阶段插入此节点。
       newFiber.flags |= Placement;
     }
     return newFiber;
@@ -1242,6 +1251,12 @@ function ChildReconciler(shouldTrackSideEffects) {
   // This API will tag the children with the side-effect of the reconciliation
   // itself. They will be added to the side-effect list as we pass through the
   // children and the parent.
+
+/*
+此 API 将用和解本身的副作用标记子代。
+当我们通过孩子和家长时，它们将被添加到副作用列表中。
+*/
+
   function reconcileChildFibers(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
@@ -1253,9 +1268,22 @@ function ChildReconciler(shouldTrackSideEffects) {
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
 
+/*
+此函数不是递归的。
+
+如果顶级项是一个数组，我们将其视为一组子项，而不是片段。
+另一方面，嵌套数组将被视为片段节点。递归发生在正常流中。
+*/
+
     // Handle top level unkeyed fragments as if they were arrays.
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
+
+/*
+处理顶级未经处理的 fragments，就好像它们是数组一样。
+这导致 <>{[…]}</> 和 <>…</> 之间存在歧义。我们对上述模棱两可的情况一视同仁。
+*/
+
     const isUnkeyedTopLevelFragment =
       typeof newChild === 'object' &&
       newChild !== null &&

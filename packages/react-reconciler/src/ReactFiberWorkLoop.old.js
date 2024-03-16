@@ -1879,6 +1879,12 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   // The current, flushed, state of this fiber is the alternate. Ideally
   // nothing should rely on this, but relying on it here means that we don't
   // need an additional field on the work in progress.
+
+/*
+  该 fiber 的当前冲洗状态为备用状态。
+  理想情况下，任何事情都不应该依赖于此，但在这里依赖它意味着我们不需要对正在进行的工作增加额外的领域。
+*/
+
   const current = unitOfWork.alternate;
   setCurrentDebugFiberInDEV(unitOfWork);
 
@@ -1892,6 +1898,7 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   }
 
   resetCurrentDebugFiberInDEV();
+  // beginWork 之后 memoizeProps 赋值了 pendingProps
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
     // If this doesn't spawn new work, complete the current work.
