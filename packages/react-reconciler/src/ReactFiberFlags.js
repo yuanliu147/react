@@ -38,6 +38,7 @@ export const LifecycleEffectMask =
 export const HostEffectMask = /*               */ 0b00000000000111111111111111;
 
 // These are not really side effects, but we still reuse this field.
+// 这些并不是真正的副作用，但我们仍然重复使用这个领域。
 export const Incomplete = /*                   */ 0b00000000001000000000000000;
 export const ShouldCapture = /*                */ 0b00000000010000000000000000;
 export const ForceUpdateForLegacySuspense = /* */ 0b00000000100000000000000000;

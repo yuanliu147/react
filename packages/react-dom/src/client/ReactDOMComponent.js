@@ -424,6 +424,7 @@ export function createElement(
       domElement = ownerDocument.createElement(type, {is: props.is});
     } else {
       // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
+      // 分离 else 分支，而不是使用上面的 “props.is||undefined” ，因为存在 Firefox bug。
       // See discussion in https://github.com/facebook/react/pull/6896
       // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
       domElement = ownerDocument.createElement(type);
@@ -433,6 +434,12 @@ export function createElement(
       // - a bug where the `select` does not scroll to the correct option because singular
       //  `select` elements automatically pick the first item #13222
       // - a bug where the `select` set the first item as selected despite the `size` attribute #14239
+      // 通常，属性是在 “setInitialDOMProperties” 中分配的，但在插入 “option” 之前，需要添加 “select” 上的 “multiple” 和 “size” 属性。
+      // 这样可以防止：
+      // 一个 bug ，其中 “select” 没有滚动到正确的选项，因为单数的“select”元素自动选择第一个项目#13222
+      // 一个 bug，其中 “select” 将第一个项目设置为所选，而不管 “size” 属性#14239
+      //
+      //
       // See https://github.com/facebook/react/issues/13222
       // and https://github.com/facebook/react/issues/14239
       if (type === 'select') {

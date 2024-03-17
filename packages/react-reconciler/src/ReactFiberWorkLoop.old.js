@@ -1913,15 +1913,24 @@ function performUnitOfWork(unitOfWork: Fiber): void {
 function completeUnitOfWork(unitOfWork: Fiber): void {
   // Attempt to complete the current unit of work, then move to the next
   // sibling. If there are no more siblings, return to the parent fiber.
+  // 尝试完成当前工作单元，然后转到下一个 sibling 。如果没有更多的 siblings，请返回到父 fiber。
+
   let completedWork = unitOfWork;
   do {
     // The current, flushed, state of this fiber is the alternate. Ideally
     // nothing should rely on this, but relying on it here means that we don't
     // need an additional field on the work in progress.
+
+/*
+ 该光纤的当前冲洗状态为备用状态。
+ 理想情况下，任何事情都不应该依赖于此，但在这里依赖它意味着我们不需要对正在进行的工作增加额外的领域。
+*/
+
     const current = completedWork.alternate;
     const returnFiber = completedWork.return;
 
     // Check if the work completed or if something threw.
+    // 检查工作是否完成 或者 是否有抛出错误
     if ((completedWork.flags & Incomplete) === NoFlags) {
       setCurrentDebugFiberInDEV(completedWork);
       let next;

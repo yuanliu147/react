@@ -856,6 +856,12 @@ function completeWork(
   // to the current tree provider fiber is just as fast and less error-prone.
   // Ideally we would have a special version of the work loop only
   // for hydration.
+
+/*
+注意：这故意不检查我们是否是 hydrating，因为与当前的树提供者 fiber 相比，它同样快速，不易出错。
+理想情况下，我们会有一个特殊版本的工作循环，只为 hydration。
+*/
+
   popTreeContext(workInProgress);
   switch (workInProgress.tag) {
     case IndeterminateComponent:
@@ -934,6 +940,11 @@ function completeWork(
               // updates too, because current.child would only be null if the
               // previous render was null (so the container would already
               // be empty).
+              /*
+              安排一个效果，以便在下一次提交开始时清除此容器。
+              这将处理React渲染到具有先前子级的容器中的情况。
+              对于更新来说，这样做也是安全的，因为current.child只有在前一个呈现为null的情况下才会为null（因此容器已经为空）。
+              */
               workInProgress.flags |= Snapshot;
 
               // If this was a forced client render, there may have been
@@ -991,6 +1002,13 @@ function completeWork(
         // "stack" as the parent. Then append children as we go in beginWork
         // or completeWork depending on whether we want to add them top->down or
         // bottom->up. Top->down is faster in IE11.
+
+        /*
+        将 createInstance 移动到 beginWork，并将其作为父级保留在上下文“堆栈”中。
+        然后在 beginWork 或 completeWork 中添加子项，这取决于我们是想从上到下还是从下到上添加它们。
+        上 -> 下 在 IE11 中更快。
+        */
+
         const wasHydrated = popHydrationState(workInProgress);
         if (wasHydrated) {
           // TODO: Move this and createInstance step into the beginPhase
@@ -1022,6 +1040,8 @@ function completeWork(
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
           // Make sure such renderers get scheduled for later work.
+          // 某些渲染器需要初始装载的提交时间效果。
+          //（例如DOM渲染器支持某些元素的自动对焦）。确保为以后的工作安排这样的渲染器。
           if (
             finalizeInitialChildren(
               instance,
@@ -1049,6 +1069,7 @@ function completeWork(
         const oldText = current.memoizedProps;
         // If we have an alternate, that means this is an update and we need
         // to schedule a side-effect to do the updates.
+        // 如果我们有一个 alternate，这意味着这是一个更新，我们需要 schedule 一个副作用来进行更新。
         updateHostText(current, workInProgress, oldText, newText);
       } else {
         if (typeof newText !== 'string') {

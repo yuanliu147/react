@@ -3775,11 +3775,11 @@ function beginWork(
         // consumer produces a changed value, it will set this to true. Otherwise,
         // the component will assume the children have not changed and bail out.
 
-/*
-   已计划在此 fiber 上更新，但是没有 new props 或 legacy context。
-   将此设置为 false。如果 update queue 或 context 消费者产生更改的值，它将设置此为 true。
-   否则，该组件将假定子节点没有改变并立即退出。
-*/
+      /*
+        已计划在此 fiber 上更新，但是没有 new props 或 legacy context。
+        将此设置为 false。如果 update queue 或 context 消费者产生更改的值，它将设置此为 true。
+        否则，该组件将假定子节点没有改变并立即退出。
+      */
 
         didReceiveUpdate = false;
       }
@@ -3790,13 +3790,17 @@ function beginWork(
     if (getIsHydrating() && isForkedChild(workInProgress)) {
       // Check if this child belongs to a list of muliple children in
       // its parent.
+      // 检查此子项是否属于其父项中的多个子项列表。
       //
       // In a true multi-threaded implementation, we would render children on
       // parallel threads. This would represent the beginning of a new render
       // thread for this subtree.
+      // 在真正的多线程实现中，我们将在并行线程上呈现子线程。这将表示该子树的新渲染线程的开始。
+      //
       //
       // We only use this for id generation during hydration, which is why the
       // logic is located in this special branch.
+      // 我们只在水合过程中使用它来生成id，这就是为什么逻辑位于这个特殊的分支中。
       const slotIndex = workInProgress.index;
       const numberOfForks = getForksAtLevel(workInProgress);
       pushTreeId(workInProgress, numberOfForks, slotIndex);
