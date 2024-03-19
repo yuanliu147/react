@@ -319,9 +319,10 @@ let focusedInstanceHandle: null | Fiber = null;
 let shouldFireAfterActiveInstanceBlur: boolean = false;
 
 export function commitBeforeMutationEffects(
-  root: FiberRoot,
-  firstChild: Fiber,
+  root: FiberRoot, // fiberRootNode
+  firstChild: Fiber, // finishedWork => hostRootFiber
 ) {
+  // 获取聚焦的 html元素 ？
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
 
   nextEffect = firstChild;
@@ -406,6 +407,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
     }
   }
 
+  // 初始情况下 flags === Snapshot
   if ((flags & Snapshot) !== NoFlags) {
     setCurrentDebugFiberInDEV(finishedWork);
 
@@ -1453,6 +1455,13 @@ function getHostSibling(fiber: Fiber): ?Instance {
   // We're going to search forward into the tree until we find a sibling host
   // node. Unfortunately, if multiple insertions are done in a row we have to
   // search past them. This leads to exponential search for the next sibling.
+
+  /*
+    我们将向前搜索树，直到找到一个 sibling 主机节点。
+    不幸的是，如果在一行中完成多个插入，我们必须搜索它们。
+    这导致了对下一个 sibling 的指数搜索。
+  */
+
   // TODO: Find a more efficient way to do this.
   let node: Fiber = fiber;
   siblings: while (true) {
@@ -1501,9 +1510,11 @@ function commitPlacement(finishedWork: Fiber): void {
   }
 
   // Recursively insert all host nodes into the parent.
+  // 找到最近的一个拥有（stateNode）具体 html 元素的 fiber 节点
   const parentFiber = getHostParentFiber(finishedWork);
 
   // Note: these two variables *must* always be updated together.
+  // 这两个变量*必须*总是一起更新。
   switch (parentFiber.tag) {
     case HostComponent: {
       const parent: Instance = parentFiber.stateNode;
@@ -2036,7 +2047,7 @@ export function isSuspenseBoundaryBeingHidden(
 export function commitMutationEffects(
   root: FiberRoot,
   finishedWork: Fiber,
-  committedLanes: Lanes,
+  committedLanes: Lanes, // finishedLanes => 初始挂载为 16
 ) {
   inProgressLanes = committedLanes;
   inProgressRoot = root;
@@ -2049,13 +2060,16 @@ export function commitMutationEffects(
   inProgressRoot = null;
 }
 
+// 用于找到最下面的那个 拥有 MutationMask 标记的 fiber 节点，该节点的 child fiber 不再有 MutationMask 标记
+// 不再递归时，此参数 parentFiber 及为那个 节点。
 function recursivelyTraverseMutationEffects(
   root: FiberRoot,
-  parentFiber: Fiber,
-  lanes: Lanes,
+  parentFiber: Fiber, // 初始为 finishedWork，之后为每次的子节点
+  lanes: Lanes, // finishedLanes
 ) {
   // Deletions effects can be scheduled on any fiber type. They need to happen
   // before the children effects hae fired.
+  // 可以在任何类型的 fiber 上 schedule Deletions effects。它们需要在 children effects 触发之前发生。
   const deletions = parentFiber.deletions;
   if (deletions !== null) {
     for (let i = 0; i < deletions.length; i++) {
@@ -2073,6 +2087,7 @@ function recursivelyTraverseMutationEffects(
     let child = parentFiber.child;
     while (child !== null) {
       setCurrentDebugFiberInDEV(child);
+      // 递归调用
       commitMutationEffectsOnFiber(child, root, lanes);
       child = child.sibling;
     }
@@ -2091,6 +2106,12 @@ function commitMutationEffectsOnFiber(
   // The effect flag should be checked *after* we refine the type of fiber,
   // because the fiber tag is more specific. An exception is any flag related
   // to reconcilation, because those can be set on all fiber types.
+
+  /*
+    在我们细化 fiber`s type  之后，应该检查 effect flag，因为fiber tag更具体。
+    一个例外是与 reconcilation 相关的任何标志，因为这些标志可以在所有 fiber 类型上设置。
+  */
+
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -2175,6 +2196,14 @@ function commitMutationEffectsOnFiber(
         // the order matters. We should refactor so that ContentReset does not
         // rely on mutating the flag during commit. Like by setting a flag
         // during the render phase instead.
+
+        /*
+          ContentReset在提交阶段由子级清除。
+          这是一个重构风险，因为这意味着我们必须在“commitReconciliationEffects”已经运行之后读取标志；
+          秩序很重要。我们应该进行重构，使ContentReset不依赖于在提交过程中更改标志。
+          就像在渲染阶段设置标志一样。
+        */
+
         if (finishedWork.flags & ContentReset) {
           const instance: Instance = finishedWork.stateNode;
           try {
@@ -2188,10 +2217,13 @@ function commitMutationEffectsOnFiber(
           const instance: Instance = finishedWork.stateNode;
           if (instance != null) {
             // Commit the work prepared earlier.
+            // 把之前准备好的工作交出来。
             const newProps = finishedWork.memoizedProps;
             // For hydration we reuse the update path but we treat the oldProps
             // as the newProps. The updatePayload will contain the real change in
             // this case.
+            // 对于水合，我们重用更新路径，但我们将旧道具视为新道具。
+            // 在这种情况下，updatePayload 将包含真正的更改。
             const oldProps =
               current !== null ? current.memoizedProps : newProps;
             const type = finishedWork.type;
@@ -2438,6 +2470,8 @@ function commitReconciliationEffects(finishedWork: Fiber) {
   // Placement effects (insertions, reorders) can be scheduled on any fiber
   // type. They needs to happen after the children effects have fired, but
   // before the effects on this fiber have fired.
+  // 可以在任何类型的 fiber 上安排Placement effects (insertions, reorders)。
+  // 它们需要在 children effects 激发之后，但在这种 fiber 的 effect 激发之前发生。
   const flags = finishedWork.flags;
   if (flags & Placement) {
     try {
@@ -2477,6 +2511,7 @@ function commitLayoutEffects_begin(
   committedLanes: Lanes,
 ) {
   // Suspense layout effects semantics don't change for legacy roots.
+  // 对于遗留根，挂起布局效果语义不会更改。
   const isModernRoot = (subtreeRoot.mode & ConcurrentMode) !== NoMode;
 
   while (nextEffect !== null) {

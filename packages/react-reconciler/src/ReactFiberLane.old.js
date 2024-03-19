@@ -690,6 +690,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   const expirationTimes = root.expirationTimes;
 
   // Clear the lanes that no longer have pending work
+  // 清除不再有待处理工作的 lanes
   let lanes = noLongerPendingLanes;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);
