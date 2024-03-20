@@ -32,6 +32,7 @@ export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
+    // 如果没有 alternate ，这可能是一个尚未插入的新树。如果是，则它将具有挂起的插入效果。
     let nextNode = node;
     do {
       node = nextNode;
@@ -51,10 +52,13 @@ export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   if (node.tag === HostRoot) {
     // TODO: Check if this was a nested HostRoot when used with
     // renderContainerIntoSubtree.
+    // 当与 renderContainerIntoSubtree 一起使用时，请检查这是否是嵌套的 HostRoot。
+    // 目标元素本身所有副作用已经完成，则此处返回目标元素本身。
     return nearestMounted;
   }
   // If we didn't hit the root, that means that we're in an disconnected tree
   // that has been unmounted.
+  // 如果我们没有找到根，那意味着我们处于一个断开连接的树中，该树已被卸载。
   return null;
 }
 

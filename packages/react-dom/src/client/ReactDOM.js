@@ -99,6 +99,7 @@ if (__DEV__) {
 }
 
 setRestoreImplementation(restoreControlledState);
+// 修改默认的 batchedUpdates
 setBatchingImplementation(
   batchedUpdates,
   discreteUpdates,

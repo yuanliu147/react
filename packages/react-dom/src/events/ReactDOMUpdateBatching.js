@@ -32,6 +32,8 @@ function finishEventHandler() {
   // when using controlled components within layers:
   // https://github.com/facebook/react/issues/1698
   // Then we restore state of any controlled component.
+  // 在这里，我们等待所有更新传播完毕，
+  // 这在层内使用受控组件时非常重要：https://github.com/facebook/react/issues/1698然后我们恢复任何受控组件的状态。
   const controlledComponentsHavePendingUpdates = needsStateRestore();
   if (controlledComponentsHavePendingUpdates) {
     // If a controlled event was fired, we may need to restore the state of
@@ -43,11 +45,12 @@ function finishEventHandler() {
     restoreStateIfNeeded();
   }
 }
-
+ 
 export function batchedUpdates(fn, a, b) {
   if (isInsideEventHandler) {
     // If we are currently inside another batch, we need to wait until it
     // fully completes before restoring state.
+    // 如果我们当前在另一个批中，我们需要等到它完全完成后才能恢复状态。
     return fn(a, b);
   }
   isInsideEventHandler = true;

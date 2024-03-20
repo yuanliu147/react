@@ -149,13 +149,14 @@ function dispatchContinuousEvent(
 export function dispatchEvent(
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
-  targetContainer: EventTarget,
+  targetContainer: EventTarget, // react 挂载的容器
   nativeEvent: AnyNativeEvent,
 ): void {
   if (!_enabled) {
     return;
   }
   if (enableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay) {
+    // 调度事件，启用捕获阶段选择性水合，无需离散事件回放
     dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay(
       domEventName,
       eventSystemFlags,
@@ -183,7 +184,7 @@ function dispatchEventOriginal(
   // but now we use different bubble and capture handlers.
   // In eager mode, we attach capture listeners early, so we need
   // to filter them out until we fix the logic to handle them correctly.
-  
+
   /*
   TODO:重放捕获阶段事件当前已中断
 
@@ -284,12 +285,13 @@ function dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEve
     nativeEvent,
   );
   if (blockedOn === null) {
+    // 初次渲染示例，进入此分支。
     dispatchEventForPluginEventSystem(
       domEventName,
       eventSystemFlags,
       nativeEvent,
-      return_targetInst,
-      targetContainer,
+      return_targetInst, // span 对应的 fiber
+      targetContainer, // div#root
     );
     clearIfContinuousEvent(domEventName, nativeEvent);
     return;
@@ -372,10 +374,12 @@ export function findInstanceBlockingEvent(
 
   return_targetInst = null;
 
+  // 事件实际发生的 目标 元素
   const nativeEventTarget = getEventTarget(nativeEvent);
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
 
   if (targetInst !== null) {
+    // 目标元素本身？
     const nearestMounted = getNearestMountedFiber(targetInst);
     if (nearestMounted === null) {
       // This tree has been unmounted already. Dispatch without a target.
@@ -408,6 +412,10 @@ export function findInstanceBlockingEvent(
         // component's mount, ignore it for now (that is, treat it as if it was an
         // event on a non-React tree). We might also consider queueing events and
         // dispatching them after the mount.
+
+        // 如果我们在提交组件的装载之前获得了一个事件（例如：img onload），请暂时忽略它（也就是说，将其视为非React树上的事件）。
+        // 我们还可以考虑对事件进行排队，并在装载后进行调度。
+
         targetInst = null;
       }
     }

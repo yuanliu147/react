@@ -64,6 +64,9 @@ function extractEvents(
   }
   let SyntheticEventCtor = SyntheticEvent;
   let reactEventType: string = domEventName;
+
+  // 此处 switch case 主要是处理合成事件。
+  // 合成事件主要是处理不同浏览器之间的 事件对象的不同
   switch (domEventName) {
     case 'keypress':
       // Firefox creates a keypress event for function keys too. This removes
@@ -92,6 +95,7 @@ function extractEvents(
     case 'click':
       // Firefox creates a click event on right mouse clicks. This removes the
       // unwanted click events.
+      // Firefox在鼠标右键单击时创建一个单击事件。这将删除不需要的单击事件。
       if (nativeEvent.button === 2) {
         return;
       }
@@ -159,7 +163,7 @@ function extractEvents(
   }
 
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
-  if (
+  if ( // 此分支无法进入？
     enableCreateEventHandleAPI &&
     eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE
   ) {
@@ -186,6 +190,10 @@ function extractEvents(
     // In the past, React has always bubbled them, but this can be surprising.
     // We're going to try aligning closer to the browser behavior by not bubbling
     // them in React either. We'll start by not bubbling onScroll, and then expand.
+    // 有些事件不会出现在浏览器中。
+    // 在过去，React总是让它们冒泡，但这可能令人惊讶。
+    // 我们将尝试通过不在React中冒泡来更接近浏览器行为。
+    // 我们将从不在Scroll上冒泡开始，然后展开。
     const accumulateTargetOnly =
       !inCapturePhase &&
       // TODO: ideally, we'd eventually add all events from
@@ -193,6 +201,8 @@ function extractEvents(
       // Then we can remove this special list.
       // This is a breaking change that can wait until React 18.
       domEventName === 'scroll';
+
+    // accumulate => 积累
 
     const listeners = accumulateSinglePhaseListeners(
       targetInst,
@@ -211,6 +221,7 @@ function extractEvents(
         nativeEvent,
         nativeEventTarget,
       );
+      // dispatchQueue 里面放置了 合成事件对象，以及对应阶段(冒泡/捕获)中所有的事件处理函数
       dispatchQueue.push({event, listeners});
     }
   }

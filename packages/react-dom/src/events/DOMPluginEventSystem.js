@@ -108,6 +108,14 @@ function extractEvents(
   // should probably be inlined somewhere and have its logic
   // be core the to event system. This would potentially allow
   // us to ship builds of React without the polyfilled plugins below.
+
+  /*
+    TODO:我们应该删除“SimpleEventPlugin”的概念。
+    这是事件系统的基本功能。所有其他插件本质上都是polyfill。
+    因此，插件可能应该在某个地方内联，并将其逻辑作为事件系统的核心。
+    这将有可能使我们能够在没有下面的polyfilled插件的情况下交付React构建。
+  */
+
   SimpleEventPlugin.extractEvents(
     dispatchQueue,
     domEventName,
@@ -284,6 +292,7 @@ function dispatchEventsForPlugins(
   targetInst: null | Fiber,
   targetContainer: EventTarget,
 ): void {
+  // 事件发生的 目标元素
   const nativeEventTarget = getEventTarget(nativeEvent);
   const dispatchQueue: DispatchQueue = [];
   extractEvents(
@@ -295,6 +304,22 @@ function dispatchEventsForPlugins(
     eventSystemFlags,
     targetContainer,
   );
+  /*
+    此时 dispatchQueue 为
+    [
+      {
+        event: 合成事件对象,
+        listeners: [
+          {
+            currentTarget: 绑定事件的元素,
+            ntance: 绑定事件的元素 对应的 fiber节点,
+            listener: 回调函数
+          }
+        ]
+      }
+    ]
+  */
+
   processDispatchQueue(dispatchQueue, eventSystemFlags);
 }
 
@@ -427,7 +452,7 @@ function addTrappedEventListener(
   isCapturePhaseListener: boolean,
   isDeferredListenerForLegacyFBSupport?: boolean,
 ) {
-  // 将事件与优先级挂钩
+  // 将事件与优先级挂钩，以及 事件处理函数 的封装处理
   let listener = createEventListenerWrapperWithPriority(
     targetContainer,
     domEventName,
@@ -443,7 +468,7 @@ function addTrappedEventListener(
     // the performance wins from the change. So we emulate
     // the existing behavior manually on the roots now.
     // https://github.com/facebook/react/issues/19651
-  /* 
+  /*
     浏览器引入了一种干预，使这些事件在默认情况下对文档是被动的。
     React不再将它们绑定到文档，但现在更改它会使更改带来的性能优势付诸东流。
     因此，我们现在在根上手动模拟现有行为。
@@ -474,7 +499,7 @@ function addTrappedEventListener(
   // browsers do not support this today, and given this is
   // to support legacy code patterns, it's likely they'll
   // need support for such browsers.
-/* 
+/*
   当 legacyFBSupport 被启用时，它适用于我们想要向容器添加一次性事件侦听器的时候。
   由于需要提供与内部 FB www 事件工具的兼容性，因此只能与enableLegacyFBSupport一起使用。
   这是通过在事件侦听器被调用后立即删除它来实现的。
@@ -572,6 +597,9 @@ export function dispatchEventForPluginEventSystem(
     // If we are using the legacy FB support flag, we
     // defer the event to the null with a one
     // time event listener so we can defer the event.
+    // 如果我们使用传统的FB支持标志，我们会使用一次性事件侦听器将事件推迟到null，这样我们就可以推迟事件。
+
+    // 不会进入此分支
     if (
       enableLegacyFBSupport &&
       // If our event flags match the required flags for entering
@@ -598,8 +626,16 @@ export function dispatchEventForPluginEventSystem(
       // root boundaries that match that of our current "rootContainer".
       // If we find that "rootContainer", we find the parent fiber
       // sub-tree for that root and make that our ancestor instance.
-      let node = targetInst;
+      // 下面的逻辑试图找出我们是否需要将目标 fiber 更改为不同的 ancestor（祖先，指上面的 ancestor 变量）。
+      // 我们在遗留事件系统中有类似的逻辑，
+      // 只是系统之间的最大区别是现代事件系统现在有一个连接到每个React Root和React Portal Root的事件侦听器。
+      // 表示这些根的DOM节点合在一起就是“rootContainer”。
+      // 为了确定我们应该使用哪个祖先实例，我们从目标实例向上遍历光纤树，并试图找到与当前“rootContainer”匹配的根边界。
+      // 如果我们找到“rootContainer”，我们就会找到该根的父 fiber 子树，并将其作为我们的 ancestor 实例。
 
+      let node = targetInst;
+      // 主要是判断目标元素的 根容器节点（div#root）是否与传入 targetContainer 一致。
+      // 正常情况下是一致的，那么可以忽略此逻辑
       mainLoop: while (true) {
         if (node === null) {
           return;
@@ -655,6 +691,7 @@ export function dispatchEventForPluginEventSystem(
     }
   }
 
+  // 相当于  excuteContext |= batchContext，在执行上下文中添加了 batchContext.
   batchedUpdates(() =>
     dispatchEventsForPlugins(
       domEventName,
@@ -701,6 +738,7 @@ export function accumulateSinglePhaseListeners(
       lastHostComponent = stateNode;
 
       // createEventHandle listeners
+      // 不会进入此分支？
       if (enableCreateEventHandleAPI) {
         const eventHandlerListeners = getEventHandlerListeners(
           lastHostComponent,
@@ -725,9 +763,11 @@ export function accumulateSinglePhaseListeners(
 
       // Standard React on* listeners, i.e. onClick or onClickCapture
       if (reactEventName !== null) {
+        // 从之前在 dom 元素上缓存的 props 中获取对应的事件处理函数并返回
         const listener = getListener(instance, reactEventName);
         if (listener != null) {
           listeners.push(
+            // 返回相关信息的一个对象。
             createDispatchListener(instance, listener, lastHostComponent),
           );
         }
