@@ -239,6 +239,8 @@ function executeDispatch(
   currentTarget: EventTarget,
 ): void {
   const type = event.type || 'unknown-event';
+  // 在遍历的过程中，需要修改 currentTarget 指向遍历的当前元素，
+  // 来模拟真实事件对象的 currentTarget 会在实际捕获、冒泡中的变化
   event.currentTarget = currentTarget;
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
   event.currentTarget = null;
@@ -635,6 +637,7 @@ export function dispatchEventForPluginEventSystem(
 
       let node = targetInst;
       // 主要是判断目标元素的 根容器节点（div#root）是否与传入 targetContainer 一致。
+
       // 正常情况下是一致的，那么可以忽略此逻辑
       mainLoop: while (true) {
         if (node === null) {

@@ -163,10 +163,10 @@ function extractEvents(
   }
 
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
-  if ( // 此分支无法进入？
+  if (
     enableCreateEventHandleAPI &&
     eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE
-  ) {
+  ) { // 此分支无法进入？
     const listeners = accumulateEventHandleNonManagedNodeListeners(
       // TODO: this cast may not make sense for events like
       // "focus" where React listens to e.g. "focusin".
@@ -200,6 +200,8 @@ function extractEvents(
       // nonDelegatedEvents list in DOMPluginEventSystem.
       // Then we can remove this special list.
       // This is a breaking change that can wait until React 18.
+      // 理想情况下，我们最终会将非委派事件列表中的所有事件添加到DOMPluginEventSystem中。
+      // 然后我们可以删除这个特殊列表。这是一个突破性的变化，可以等到React 18。
       domEventName === 'scroll';
 
     // accumulate => 积累
