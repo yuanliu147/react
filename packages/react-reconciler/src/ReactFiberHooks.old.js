@@ -392,6 +392,7 @@ export function renderWithHooks<Props, SecondArg>(
       current !== null && current.type !== workInProgress.type;
   }
 
+  // 函数组件对应的 fiber.memoizedState 指向 hooks 链表的第一个。
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
   workInProgress.lanes = NoLanes;
@@ -642,7 +643,7 @@ function mountWorkInProgressHook(): Hook {
 
     next: null,
   };
-
+  // workInProgressHook 指向最后一个 hook
   if (workInProgressHook === null) {
     // This is the first hook in the list
     currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
@@ -818,6 +819,7 @@ function updateReducer<S, I, A>(
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
+        // 优先级不足。跳过此更新。如果这是第一次跳过的更新，则先前的更新/状态为新的基本更新/状态。
         const clone: Update<S, A> = {
           lane: updateLane,
           action: update.action,
@@ -860,6 +862,7 @@ function updateReducer<S, I, A>(
         if (update.hasEagerState) {
           // If this update is a state update (not a reducer) and was processed eagerly,
           // we can use the eagerly computed state
+          // 如果这个更新是一个state update（而不是 reducer）并且被急切地处理，我们可以使用急切地计算的状态
           newState = ((update.eagerState: any): S);
         } else {
           const action = update.action;
@@ -877,6 +880,7 @@ function updateReducer<S, I, A>(
 
     // Mark that the fiber performed work, but only if the new state is
     // different from the current state.
+    // 标记 fiber 已执行工作，但前提是新状态与当前状态不同。
     if (!is(newState, hook.memoizedState)) {
       markWorkInProgressReceivedUpdate();
     }
@@ -891,6 +895,7 @@ function updateReducer<S, I, A>(
   // Interleaved updates are stored on a separate queue. We aren't going to
   // process them during this render, but we do need to track which lanes
   // are remaining.
+  // Interleaved updates 存储在一个单独的队列中。我们不会在渲染过程中处理它们，但我们确实需要跟踪剩余的车道。
   const lastInterleaved = queue.interleaved;
   if (lastInterleaved !== null) {
     let interleaved = lastInterleaved;
@@ -906,9 +911,11 @@ function updateReducer<S, I, A>(
   } else if (baseQueue === null) {
     // `queue.lanes` is used for entangling transitions. We can set it back to
     // zero once the queue is empty.
+    // `queue.lanes’用于纠缠转换。一旦队列为空，我们就可以将其设置回零。
     queue.lanes = NoLanes;
   }
 
+  // 这里是直接复用的 mountReducer 时在 queue 中保存的 dispatch
   const dispatch: Dispatch<A> = (queue.dispatch: any);
   return [hook.memoizedState, dispatch];
 }

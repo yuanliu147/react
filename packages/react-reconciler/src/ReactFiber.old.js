@@ -305,10 +305,12 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
   // Reset all effects except static ones.
   // Static effects are not specific to a render.
+  // 重置除静态效果外的所有效果。静态效果并非特定于渲染。
   workInProgress.flags = current.flags & StaticMask;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
 
+  // 更新时，workInProgress.child 指向 current.child. （同一个引用对象）
   workInProgress.child = current.child;
   workInProgress.memoizedProps = current.memoizedProps;
   workInProgress.memoizedState = current.memoizedState;

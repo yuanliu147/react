@@ -99,6 +99,7 @@ export const enableCacheElement = __EXPERIMENTAL__;
 export const enableTransitionTracing = false;
 
 // No known bugs, but needs performance testing
+// 没有已知的错误，但需要进行性能测试
 export const enableLazyContextPropagation = false;
 
 // FB-only usage. The new API has different semantics.

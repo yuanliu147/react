@@ -169,6 +169,7 @@ import {popRootTransition, popTransition} from './ReactFiberTransition.old';
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
   // a PlacementAndUpdate.
+  // 标记具有更新效果的 fiber。这会将 Placement 转换为 PlacementAndUpdate。
   workInProgress.flags |= Update;
 }
 
@@ -258,22 +259,29 @@ if (supportsMutation) {
   ) {
     // If we have an alternate, that means this is an update and we need to
     // schedule a side-effect to do the updates.
+    // 如果我们有一个 alternate，这意味着这是一个更新，我们需要安排一个副作用来进行更新。
     const oldProps = current.memoizedProps;
     if (oldProps === newProps) {
       // In mutation mode, this is sufficient for a bailout because
       // we won't touch this node even if children changed.
+      // 在 mutation mode 下，这足以进行 bailout，因为即使孩子们改变了，我们也不会接触这个节点。
       return;
     }
 
     // If we get updated because one of our children updated, we don't
     // have newProps so we'll have to reuse them.
+    // 如果我们因为我们的一个孩子更新了而更新，我们就没有 newProps，所以我们必须重新使用它们。
+
     // TODO: Split the update API as separate for the props vs. children.
     // Even better would be if children weren't special cased at all tho.
+    // TODO：将更新API拆分为单独的 props 与 children。如果 children 一点也不特殊，那就更好了。
+
     const instance: Instance = workInProgress.stateNode;
     const currentHostContext = getHostContext();
     // TODO: Experiencing an error where oldProps is null. Suggests a host
     // component is hitting the resume path. Figure out why. Possibly
     // related to `hidden`.
+    // 遇到 oldProps 为 null 的错误。表明 host component 正在访问恢复路径。找出原因。可能与“隐藏”有关。
     const updatePayload = prepareUpdate(
       instance,
       type,
@@ -703,9 +711,11 @@ function bubbleProperties(completedWork: Fiber) {
     completedWork.subtreeFlags |= subtreeFlags;
   } else {
     // Bubble up the earliest expiration time.
+    // 冒泡最早的过期时间。
     if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
       // In profiling mode, resetChildExpirationTime is also used to reset
       // profiler durations.
+      // 在分析模式中，resetChildExpirationTime 也用于重置分析程序持续时间。
       let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
 
       let child = completedWork.child;
@@ -719,6 +729,8 @@ function bubbleProperties(completedWork: Fiber) {
         // so we should bubble those up even during a bailout. All the other
         // flags have a lifetime only of a single render + commit, so we should
         // ignore them.
+        // “Static” flags 与它们所属的 fiber/hoos 的寿命相同，所以即使在 bailout 期间，我们也应该将它们 bubble 起来。
+        // 所有其他 flags 的生存期只有一个 render + commit，所以我们应该忽略它们。
         subtreeFlags |= child.subtreeFlags & StaticMask;
         subtreeFlags |= child.flags & StaticMask;
 

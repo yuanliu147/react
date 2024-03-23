@@ -354,6 +354,7 @@ function commitBeforeMutationEffects_begin() {
     }
 
     const child = fiber.child;
+    // nextEffect 指向了最下面的那个 没有 BeforeMutationMask 或者 child === null 的 fiber
     if (
       (fiber.subtreeFlags & BeforeMutationMask) !== NoFlags &&
       child !== null

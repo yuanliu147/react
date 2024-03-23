@@ -3386,8 +3386,11 @@ function bailoutOnAlreadyFinishedWork(
   markSkippedUpdateLanes(workInProgress.lanes);
 
   // Check if the children have any pending work.
+  // 检查 children 是否存在任意待执行的工作
   if (!includesSomeLane(renderLanes, workInProgress.childLanes)) {
     // The children don't have any work either. We can skip them.
+
+    // 一旦我们添加了恢复，我们应该检查孩子们是否是正在进行的工作组。如果是这样，我们需要转移它们的影响。
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
 
@@ -3405,6 +3408,7 @@ function bailoutOnAlreadyFinishedWork(
 
   // This fiber doesn't have work, but its subtree does. Clone the child
   // fibers and continue.
+  // 此 fiber 没有工作，但它的子树有 工作。克隆子 fiber 并继续。
   cloneChildFibers(current, workInProgress);
   return workInProgress.child;
 }
@@ -3475,7 +3479,7 @@ function remountFiber(
 
 function checkScheduledUpdateOrContext(
   current: Fiber,
-  renderLanes: Lanes,
+  renderLanes: Lanes, // 待处理的 lanes
 ): boolean {
   // Before performing an early bailout, we must check if there are pending
   // updates or context.
@@ -3486,6 +3490,8 @@ function checkScheduledUpdateOrContext(
   }
   // No pending update, but because context is propagated lazily, we need
   // to check for a context change before we bail out.
+  // 没有挂起的更新，但由于上下文是延迟传播的，我们需要在退出之前检查上下文是否发生了更改。
+  // false
   if (enableLazyContextPropagation) {
     const dependencies = current.dependencies;
     if (dependencies !== null && checkIfContextChanged(dependencies)) {
@@ -3503,6 +3509,7 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
   // This fiber does not have any pending work. Bailout without entering
   // the begin phase. There's still some bookkeeping we that needs to be done
   // in this optimized path, mostly pushing stuff onto the stack.
+  // 此 fiber 没有任何待处理的工作。在未进入开始阶段的情况下 Bailout。我们仍然需要在这个优化的路径上进行一些记账，主要是将内容推到堆栈上。
   switch (workInProgress.tag) {
     case HostRoot:
       pushHostRootContext(workInProgress);
@@ -3755,9 +3762,11 @@ function beginWork(
         !hasScheduledUpdateOrContext &&
         // If this is the second pass of an error or suspense boundary, there
         // may not be work scheduled on `current`, so we check for this flag.
+        // 如果这是第二次通过错误或 suspense boundary，则可能没有在“当前”上安排工作，因此我们检查此标志。
         (workInProgress.flags & DidCapture) === NoFlags
       ) {
         // No pending updates or context. Bail out now.
+        // 没有挂起的更新或上下文。现在就保释。
         didReceiveUpdate = false;
         return attemptEarlyBailoutIfNoScheduledUpdate(
           current,

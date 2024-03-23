@@ -1705,6 +1705,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
   // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
   // 如果 root 或 lanes 发生了变化，则丢弃现有堆栈并准备新的堆栈。否则，我们将继续原来的做法。
+  // 当渲染结束之后，workInProgressRoot === null
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes) {
     if (enableUpdaterTracking) {
       if (isDevToolsPresent) {
@@ -2012,8 +2013,10 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
       return;
     }
     // Otherwise, return to the parent
+    // 否则，返回到父级
     completedWork = returnFiber;
     // Update the next thing we're working on in case something throws.
+    // 更新我们正在处理的下一件事，以防出现问题。
     workInProgress = completedWork;
   } while (completedWork !== null);
 

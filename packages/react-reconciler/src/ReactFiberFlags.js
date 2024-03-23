@@ -93,4 +93,5 @@ export const PassiveMask = Passive | ChildDeletion;
 // Union of tags that don't get reset on clones.
 // This allows certain concepts to persist without recalculating them,
 // e.g. whether a subtree contains passive effects or portals.
+// 克隆上不会重置的标签的联合。这允许某些概念在不重新计算的情况下持续存在，例如子树是否包含 passive effects 或 portals。
 export const StaticMask = LayoutStatic | PassiveStatic | RefStatic;
