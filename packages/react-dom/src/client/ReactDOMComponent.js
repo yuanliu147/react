@@ -780,6 +780,8 @@ export function diffProperties(
     } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         // We eagerly listen to this even though we haven't committed yet.
+        // 尽管我们还没有做出承诺，但我们还是热切地倾听这一点。
+        // 尽管我没并不会提交它，但是我没提交进行了监听。
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
@@ -791,6 +793,7 @@ export function diffProperties(
         // This is a special case. If any listener updates we need to ensure
         // that the "current" props pointer gets updated so we need a commit
         // to update this element.
+        // 这是一个特例。如果任何侦听器更新，我们需要确保“当前”props指针得到更新，因此我们需要提交来更新该元素。
         updatePayload = [];
       }
     } else {

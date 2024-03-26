@@ -843,12 +843,14 @@ function updateReducer<S, I, A>(
         markSkippedUpdateLanes(updateLane);
       } else {
         // This update does have sufficient priority.
-
+        // 这个更新确实有足够的优先级。
         if (newBaseQueueLast !== null) {
           const clone: Update<S, A> = {
             // This update is going to be committed so we never want uncommit
             // it. Using NoLane works because 0 is a subset of all bitmasks, so
             // this will never be skipped by the check above.
+            // 此更新将被提交，因此我们永远不想取消提交。
+            // 使用NoLane是可行的，因为0是所有位掩码的子集，所以上面的检查永远不会跳过它。
             lane: NoLane,
             action: update.action,
             hasEagerState: update.hasEagerState,
@@ -2273,6 +2275,7 @@ function dispatchSetState<S, A>(
       // The queue is currently empty, which means we can eagerly compute the
       // next state before entering the render phase. If the new state is the
       // same as the current state, we may be able to bail out entirely.
+      // 队列当前是空的，这意味着我们可以在进入渲染阶段之前急切地计算下一个状态。如果新的状态与当前状态相同，我们可能能够完全 bail out。
       const lastRenderedReducer = queue.lastRenderedReducer;
       if (lastRenderedReducer !== null) {
         let prevDispatcher;
@@ -2287,6 +2290,8 @@ function dispatchSetState<S, A>(
           // it, on the update object. If the reducer hasn't changed by the
           // time we enter the render phase, then the eager state can be used
           // without calling the reducer again.
+          // 将急切计算的状态和用于计算状态的 reducer 存储在更新对象上。
+          // 如果 reducer 在我们进入渲染阶段时还没有改变，那么可以使用急切状态而无需再次调用 reducer 。
           update.hasEagerState = true;
           update.eagerState = eagerState;
           if (is(eagerState, currentState)) {
@@ -2294,7 +2299,10 @@ function dispatchSetState<S, A>(
             // It's still possible that we'll need to rebase this update later,
             // if the component re-renders for a different reason and by that
             // time the reducer has changed.
+            // 快速路径。我们可以在不安排React重新渲染的情况下退出。
+            // 如果组件由于不同的原因重新渲染，并且到那时 reducer 已经更改，我们仍然有可能需要稍后重新设置此更新的基础。
             // TODO: Do we still need to entangle transitions in this case?
+            // TODO: 在这种情况下我们还需要 entangle transitions 吗？
             enqueueConcurrentHookUpdateAndEagerlyBailout(
               fiber,
               queue,
