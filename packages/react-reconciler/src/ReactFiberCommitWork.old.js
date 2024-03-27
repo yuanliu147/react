@@ -924,6 +924,8 @@ function commitLayoutEffectOnFiber(
         // (eg DOM renderer may schedule auto-focus for inputs and form controls).
         // These effects should only be committed when components are first mounted,
         // aka when there is no current/alternate.
+        // 渲染器可以 schedule work to be done 在 host components mounted 后（例如DOM渲染器可以 schedule 输入和表单控件的自动聚焦）。
+        // 这些影响只应在组件首次安装时发生，也就是没有 current/alternate. 时。
         if (current === null && finishedWork.flags & Update) {
           const type = finishedWork.type;
           const props = finishedWork.memoizedProps;

@@ -226,6 +226,8 @@ export function isSimpleFunctionComponent(type: any) {
   return (
     typeof type === 'function' &&
     !shouldConstruct(type) &&
+    // 此处判断了 defaultProps === undefined ?
+    // 是否是这样就不推荐设置 Component.defaultProps
     type.defaultProps === undefined
   );
 }

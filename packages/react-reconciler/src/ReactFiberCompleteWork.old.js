@@ -731,6 +731,8 @@ function bubbleProperties(completedWork: Fiber) {
         // ignore them.
         // “Static” flags 与它们所属的 fiber/hoos 的寿命相同，所以即使在 bailout 期间，我们也应该将它们 bubble 起来。
         // 所有其他 flags 的生存期只有一个 render + commit，所以我们应该忽略它们。
+
+        // ! 忽略了子树所有 StaticMask 的 flags
         subtreeFlags |= child.subtreeFlags & StaticMask;
         subtreeFlags |= child.flags & StaticMask;
 

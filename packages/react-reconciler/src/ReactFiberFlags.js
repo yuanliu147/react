@@ -12,6 +12,7 @@ import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 export type Flags = number;
 
 // Don't change these two values. They're used by React Dev Tools.
+// 不要改变这两个值。React开发工具使用它们。
 export const NoFlags = /*                      */ 0b00000000000000000000000000;
 export const PerformedWork = /*                */ 0b00000000000000000000000001;
 

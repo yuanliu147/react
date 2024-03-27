@@ -470,6 +470,7 @@ function updateMemoComponent(
       isSimpleFunctionComponent(type) &&
       Component.compare === null &&
       // SimpleMemoComponent codepath doesn't resolve outer props either.
+      // SimpleMemoComponent 代码路径也不解析外部 props 。
       Component.defaultProps === undefined
     ) {
       let resolvedType = type;
@@ -479,6 +480,7 @@ function updateMemoComponent(
       // If this is a plain function component without default props,
       // and with only the default shallow comparison, we upgrade it
       // to a SimpleMemoComponent to allow fast path updates.
+      // 如果这是一个没有 default props 的普通函数组件，并且只有默认的浅比较，我们将其升级为 SimpleMemoComponent 以允许快速路径更新。
       workInProgress.tag = SimpleMemoComponent;
       workInProgress.type = resolvedType;
       if (__DEV__) {
@@ -567,7 +569,8 @@ function updateSimpleMemoComponent(
   // TODO: current can be non-null here even if the component
   // hasn't yet mounted. This happens when the inner render suspends.
   // We'll need to figure out if this is fine or can cause issues.
-
+  // 即使组件尚未安装，current 在此处也可以为非空。当内部渲染挂起时会发生这种情况。
+  // 我们需要弄清楚这是好的还是会引起问题。
   if (__DEV__) {
     if (workInProgress.type !== workInProgress.elementType) {
       // Lazy component props can't be validated in createElement
@@ -604,17 +607,21 @@ function updateSimpleMemoComponent(
       shallowEqual(prevProps, nextProps) &&
       current.ref === workInProgress.ref &&
       // Prevent bailout if the implementation changed due to hot reload.
+      // 如果由于热重载而改变了实现，则防止进行救助。
       (__DEV__ ? workInProgress.type === current.type : true)
     ) {
       didReceiveUpdate = false;
 
       // The props are shallowly equal. Reuse the previous props object, like we
       // would during a normal fiber bailout.
+      // props 浅等。重用以前的 props 对象，就像我们在正常的 fiber 紧急救援期间一样。
       //
       // We don't have strong guarantees that the props object is referentially
       // equal during updates where we can't bail out anyway — like if the props
       // are shallowly equal, but there's a local state or context update in the
       // same batch.
+      // 在我们无论如何都不能退出的更新期间，我们不能强有力地保证props对象在引用上是相等的——就像如果props是浅相等的，
+      // 但是在同一批中有本地状态或上下文更新。
       //
       // However, as a principle, we should aim to make the behavior consistent
       // across different ways of memoizing a component. For example, React.memo
@@ -623,6 +630,10 @@ function updateSimpleMemoComponent(
       // like forwardRef (MemoComponent). But this is an implementation detail.
       // Wrapping a component in forwardRef (or React.lazy, etc) shouldn't
       // affect whether the props object is reused during a bailout.
+      // 然而，作为一个原则，我们应该致力于使不同组件记忆方式的行为保持一致。
+      // 例如，如果您传递一个普通的函数组件（SimpleMemoComponent）和一个不同的类型（如forward ref（MemoComponent）），
+      // React.memo具有不同的内部 fiber 布局。
+      // 但这是一个实现细节。在forwardRef（或React.lazy等）中包装组件不应该影响 props 对象在 bailout 期间是否被重用。
       workInProgress.pendingProps = nextProps = prevProps;
 
       if (!checkScheduledUpdateOrContext(current, renderLanes)) {
@@ -637,8 +648,16 @@ function updateSimpleMemoComponent(
         // because a MemoComponent fiber does not have hooks or an update queue;
         // rather, it wraps around an inner component, which may or may not
         // contains hooks.
+        // pending lanes 在 beginWork 开始时就已清理完毕。
+        // 我们即将退出，但可能还有其他 lanes 没有包括在当前渲染中。
+        // 通常，剩余更新的优先级是在组件评估期间（即处理更新队列时）累积的。
+        // 但是既然我们在没有评估组件的情况下就提前退出了，我们也需要在这里考虑它。
+        // 重置为当前 fiber 的值。
+        // 注意:这只适用于SimpleMemoComponent，不适用于MemoComponent，
+        // 因为MemoComponent fiber 没有 hooks 或 update queue；相反，它包裹着一个内部组件，该组件可能包含也可能不包含钩子。
         // TODO: Move the reset at in beginWork out of the common path so that
         // this is no longer necessary.
+        // 将 beginWork 中的重置移出公共路径，这样就不再需要它了。
         workInProgress.lanes = current.lanes;
         return bailoutOnAlreadyFinishedWork(
           current,
@@ -3402,6 +3421,7 @@ function bailoutOnAlreadyFinishedWork(
         return null;
       }
     } else {
+      // 返回 null（也就是 beginWork 返回 null），标明 其所有子 fiber 都是复用之前的 fiber（不再继续往下构建 fiber 了）
       return null;
     }
   }
