@@ -189,6 +189,8 @@ let currentlyRenderingFiber: Fiber = (null: any);
 // current hook list is the list that belongs to the current fiber. The
 // work-in-progress hook list is a new list that will be added to the
 // work-in-progress fiber.
+// Hooks 作为链表存储在 fiber 的 memoizedState 字段中。
+// 当前 hook 列表是属于当前 fiber 的列表。正在进行中的 hook 列表是一个新列表，将被添加到正在进行中的 fiber 中。
 let currentHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
 
@@ -564,6 +566,10 @@ export function checkDidRenderIdHook() {
   return didRenderIdHook;
 }
 
+/*
+* 删除 fiber.flags 中对应的 PassiveEffect 以及 UpdateEffect
+* 删除 fiber.lanes 中的当前 lane
+* */
 export function bailoutHooks(
   current: Fiber,
   workInProgress: Fiber,
@@ -660,6 +666,10 @@ function updateWorkInProgressHook(): Hook {
   // clone, or a work-in-progress hook from a previous render pass that we can
   // use as a base. When we reach the end of the base list, we must switch to
   // the dispatcher used for mounts.
+  // 该函数既用于更新，也用于渲染阶段更新触发的重新渲染。
+  // 它假设要么有一个我们可以克隆的当前钩子，要么有一个来自先前渲染过程的正在进行中的钩子可以用作基础。
+  // 当我们到达基本列表的末尾时，我们必须切换到用于挂载的调度程序。
+
   let nextCurrentHook: null | Hook;
   if (currentHook === null) {
     const current = currentlyRenderingFiber.alternate;
@@ -883,6 +893,7 @@ function updateReducer<S, I, A>(
     // Mark that the fiber performed work, but only if the new state is
     // different from the current state.
     // 标记 fiber 已执行工作，但前提是新状态与当前状态不同。
+    // 通过 hook.queue 的依次执行，发现 newState 和 hook.memoizedState（老状态）不同，则重新设置全局变量 didReceiveUpdate = true。
     if (!is(newState, hook.memoizedState)) {
       markWorkInProgressReceivedUpdate();
     }
@@ -1677,6 +1688,7 @@ function updateRef<T>(initialValue: T): {|current: T|} {
 function mountEffectImpl(fiberFlags, hookFlags, create, deps): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
+  // 表示是否存在 useEffect 相关。
   currentlyRenderingFiber.flags |= fiberFlags;
   hook.memoizedState = pushEffect(
     HookHasEffect | hookFlags,

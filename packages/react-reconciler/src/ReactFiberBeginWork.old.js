@@ -3762,6 +3762,8 @@ function beginWork(
     const newProps = workInProgress.pendingProps;
 
     if (
+      // 对于第一次更新来说，貌似 oldProps 会一直 === newProps
+      // 其余组件来说，除非复用 fiber 节点。否则 oldProps !== newProps
       oldProps !== newProps ||
       hasLegacyContextChanged() ||
       // Force a re-render if the implementation changed due to hot reload:
@@ -3805,7 +3807,7 @@ function beginWork(
         // the component will assume the children have not changed and bail out.
 
       /*
-        已计划在此 fiber 上更新，但是没有 new props 或 legacy context。
+        此 fiber 存在更新，但是没有 new props 或 legacy context。
         将此设置为 false。如果 update queue 或 context 消费者产生更改的值，它将设置此为 true。
         否则，该组件将假定子节点没有改变并立即退出。
       */

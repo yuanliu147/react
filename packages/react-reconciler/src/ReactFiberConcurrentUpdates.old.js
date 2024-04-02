@@ -158,6 +158,9 @@ function markUpdateLaneFromFiberToRoot(
   // Update the source fiber's lanes
   sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
   let alternate = sourceFiber.alternate;
+  // 第一次更新时，alternate === null呀，但是（第二次及）之后的更新就存在 alternate 了。
+  // 这些情况貌似会影响 beginWork 时的 checkScheduledUpdateOrContext 逻辑
+
   if (alternate !== null) {
     alternate.lanes = mergeLanes(alternate.lanes, lane);
   }

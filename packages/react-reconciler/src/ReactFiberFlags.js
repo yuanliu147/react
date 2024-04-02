@@ -52,6 +52,8 @@ export const Forked = /*                       */ 0b00000100000000000000000000;
 // This enables us to defer more work in the unmount case,
 // since we can defer traversing the tree during layout to look for Passive effects,
 // and instead rely on the static flag as a signal that there may be cleanup work.
+// Static tags 描述了 fiber 不特定于渲染的方面，例如 fiber 使用 passive effect（即使该特定渲染没有更新）。
+// 这使我们能够在卸载的情况下推迟更多的工作，因为我们可以在布局期间推迟遍历树以寻找 Passive effects，而是依靠 static flag 作为可能有清理工作的信号。
 export const RefStatic = /*                    */ 0b00001000000000000000000000;
 export const LayoutStatic = /*                 */ 0b00010000000000000000000000;
 export const PassiveStatic = /*                */ 0b00100000000000000000000000;

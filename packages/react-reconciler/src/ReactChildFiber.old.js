@@ -1138,7 +1138,7 @@ function ChildReconciler(shouldTrackSideEffects) {
   function reconcileSingleElement(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
-    element: ReactElement,
+    element: ReactElement, // 此 element 为 函数组件返回的新的 jsx 元素
     lanes: Lanes,
   ): Fiber {
     const key = element.key;

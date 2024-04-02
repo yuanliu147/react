@@ -858,16 +858,19 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 
   // Flush any pending passive effects before deciding which lanes to work on,
   // in case they schedule additional work.
-  // 在决定要处理哪些车道之前，清除任何挂起的被动效果，以防它们安排额外的工作。
+  // 在决定要处理哪些车道之前，清除任何 passive effects（useEffect回调），以防它们安排额外的工作。
   const originalCallbackNode = root.callbackNode;
   const didFlushPassiveEffects = flushPassiveEffects();
   if (didFlushPassiveEffects) {
     // Something in the passive effect phase may have canceled the current task.
     // Check if the task node for this root was changed.
+    // passive effect 阶段的某些东西可能已经取消了当前任务。检查此根的任务节点是否已更改。
     if (root.callbackNode !== originalCallbackNode) {
       // The current task was canceled. Exit. We don't need to call
       // `ensureRootIsScheduled` because the check above implies either that
       // there's a new task, or that there's no remaining work on this root.
+      // 当前任务已取消。
+      // 退出。我们不需要调用ensureRootIsScheduled，因为上面的检查意味着要么有一个新任务，要么在这个根上没有剩余的工作。
       return null;
     } else {
       // Current task was not canceled. Continue.
@@ -2182,6 +2185,9 @@ function commitRootImpl(
       // because workInProgressTransitions might have changed between
       // the previous render and commit if we throttle the commit
       // with setTimeout
+      // workInProgressTransitions 可能会被覆盖，因此我们希望将其存储在 pendingPassiveTransitions 中，直到它们得到处理。
+      // 我们需要将其作为参数传递给 commitRoot，因为如果我们使用 setTimeout 限制提交，
+      // workInProgressTransitions 可能会在之前的渲染和提交之间发生变化
       pendingPassiveTransitions = transitions;
       scheduleCallback(NormalSchedulerPriority, () => {
         flushPassiveEffects();
@@ -2194,7 +2200,7 @@ function commitRootImpl(
   }
 
   // Check if there are any effects in the whole tree.
-  // 检查整棵树是否有任何效果。
+  // 检查整棵树是否有任何 effects。
   // TODO: This is left over from the effect list implementation, where we had
   // to check for the existence of `firstEffect` to satisfy Flow. I think the
   // only other reason this optimization exists is because it affects profiling.
@@ -2516,7 +2522,7 @@ export function flushPassiveEffects(): boolean {
   /*
 返回是否刷新了被动效果。
 
-TODO:将此检查与flushPassiveEFfectsImpl中的检查合并。
+TODO:将此检查与 flushPassiveEFfectsImpl 中的检查合并。
 
 我们也许应该把这两个函数结合起来。
 我相信它们最初只是分开的，因为我们过去用“Scheduler.runWithPriority”来包装它，它接受一个函数。
