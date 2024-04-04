@@ -2443,7 +2443,7 @@ function commitRootImpl(
 
   /*
     如果被动效果是离散渲染的结果，请在当前任务结束时同步刷新它们，以便立即观察结果。
-    否则，我们假设它们不依赖于顺序，不需要被外部系统观察，所以我们可以等到油漆之后。
+    否则，我们假设它们不依赖于顺序，不需要被外部系统观察，所以我们可以等到 paint 之后。
   */
 
   // TODO: We can optimize this by not scheduling the callback earlier. Since we

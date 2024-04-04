@@ -355,6 +355,7 @@ function commitBeforeMutationEffects_begin() {
 
     const child = fiber.child;
     // nextEffect 指向了最下面的那个 没有 BeforeMutationMask 或者 child === null 的 fiber
+    // 如果函数组件使用了 useLayoutEffect 那么其 flags 则会标记 Update（属于 BeforeMutationMask）
     if (
       (fiber.subtreeFlags & BeforeMutationMask) !== NoFlags &&
       child !== null
@@ -2086,6 +2087,7 @@ function recursivelyTraverseMutationEffects(
   }
 
   const prevDebugFiber = getCurrentDebugFiberInDEV();
+  // // 如果函数组件使用了 useLayoutEffect 那么其 flags 则会标记 Update（属于 MutationMask）
   if (parentFiber.subtreeFlags & MutationMask) {
     let child = parentFiber.child;
     while (child !== null) {
@@ -2142,6 +2144,10 @@ function commitMutationEffectsOnFiber(
         // This prevents sibling component effects from interfering with each other,
         // e.g. a destroy function in one component should never override a ref set
         // by a create function in another component during the same commit.
+
+        // Layout effects 在 mutation phase 被 destroyed，因此所有 fiber 的所有 destroy functions 都在任何 create functions 之前被调用。
+        // 这可以防止同级组件效果相互干扰，
+        // 例如，在同一提交期间，一个组件中的 destroy 函数不应覆盖另一个组件中的 create 函数设置的 ref 。
         if (
           enableProfilerTimer &&
           enableProfilerCommitHooks &&
