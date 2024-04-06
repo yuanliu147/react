@@ -462,6 +462,7 @@ export function processUpdateQueue<State>(
   renderLanes: Lanes,
 ): void {
   // This is always non-null on a ClassComponent or HostRoot
+  // 这在 ClassComponent 或 HostRoot 上始终非空。
   const queue: UpdateQueue<State> = (workInProgress.updateQueue: any);
 
   hasForceUpdate = false;
@@ -474,16 +475,19 @@ export function processUpdateQueue<State>(
   let lastBaseUpdate = queue.lastBaseUpdate;
 
   // Check if there are pending updates. If so, transfer them to the base queue.
+  // 检查是否有待处理的更新。如果有，将它们转移到 base queue 中。
   let pendingQueue = queue.shared.pending;
   if (pendingQueue !== null) {
     queue.shared.pending = null;
 
     // The pending queue is circular. Disconnect the pointer between first
     // and last so that it's non-circular.
+    // pending queue 是循环的。断开第一个和最后一个之间的指针，使其变成非循环的。
     const lastPendingUpdate = pendingQueue;
     const firstPendingUpdate = lastPendingUpdate.next;
     lastPendingUpdate.next = null;
     // Append pending updates to base queue
+    // 将 pending updates 附加到 base queue 中
     if (lastBaseUpdate === null) {
       firstBaseUpdate = firstPendingUpdate;
     } else {
@@ -495,6 +499,8 @@ export function processUpdateQueue<State>(
     // we need to transfer the updates to that queue, too. Because the base
     // queue is a singly-linked list with no cycles, we can append to both
     // lists and take advantage of structural sharing.
+    // 如果存在 current queue，并且它与 base queue 不同，那么我们还需要将更新转移到该队列中。
+    // 由于 base queue 是一个没有循环的单链表，我们可以将更新追加到这两个列表中，并利用结构共享的优势。
     // TODO: Pass `current` as argument
     const current = workInProgress.alternate;
     if (current !== null) {
@@ -515,11 +521,14 @@ export function processUpdateQueue<State>(
   // 此时，current 和 workInProgress 的 updateQueue 的 firstBaseUpdate 和 lastBaseUpdate 都作为同一个链表的第一个和最后一个节点。
 
   // These values may change as we process the queue.
+  // 当我们处理队列时，这些值可能会发生变化。
   if (firstBaseUpdate !== null) {
     // Iterate through the list of updates to compute the result.
+    // 遍历更新列表来计算结果。
     let newState = queue.baseState;
     // TODO: Don't need to accumulate this. Instead, we can remove renderLanes
     // from the original lanes.
+    // 不要需要累积这个。相反，我们可以从原始 lanes 中删除 renderLanes。
     let newLanes = NoLanes;
 
     let newBaseState = null;
@@ -534,6 +543,8 @@ export function processUpdateQueue<State>(
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
+        // 优先级不足。跳过此更新。
+        // 如果这是第一个被跳过的更新，则前一个 update/state 成为 new base update/state。
         const clone: Update<State> = {
           eventTime: updateEventTime,
           lane: updateLane,
@@ -551,16 +562,18 @@ export function processUpdateQueue<State>(
           newLastBaseUpdate = newLastBaseUpdate.next = clone;
         }
         // Update the remaining priority in the queue.
+        // 处理（更新）队列中的剩余优先级。
         newLanes = mergeLanes(newLanes, updateLane);
       } else {
         // This update does have sufficient priority.
-
+        // 此更新具有足够的优先级。
         if (newLastBaseUpdate !== null) {
           const clone: Update<State> = {
             eventTime: updateEventTime,
             // This update is going to be committed so we never want uncommit
             // it. Using NoLane works because 0 is a subset of all bitmasks, so
             // this will never be skipped by the check above.
+            // 此更新将被提交，因此我们不希望取消提交。使用 NoLane 是因为 0 是所有位掩码的子集，所以上述检查永远不会跳过此更新。
             lane: NoLane,
 
             tag: update.tag,
@@ -587,6 +600,7 @@ export function processUpdateQueue<State>(
           callback !== null &&
           // If the update was already committed, we should not queue its
           // callback again.
+          // 如果更新已经提交，我们不应再次将其回调函数加入队列。
           update.lane !== NoLane
         ) {
           workInProgress.flags |= Callback;
@@ -610,6 +624,7 @@ export function processUpdateQueue<State>(
           const lastPendingUpdate = pendingQueue;
           // Intentionally unsound. Pending updates form a circular list, but we
           // unravel them when transferring them to the base queue.
+          // 有意不安全。待处理的更新形成一个循环列表，但在将它们转移到基本队列时，我们会将其解开。
           const firstPendingUpdate = ((lastPendingUpdate.next: any): Update<State>);
           lastPendingUpdate.next = null;
           update = firstPendingUpdate;
@@ -630,6 +645,7 @@ export function processUpdateQueue<State>(
     // Interleaved updates are stored on a separate queue. We aren't going to
     // process them during this render, but we do need to track which lanes
     // are remaining.
+    // Interleaved updates 存储在单独的队列中。在此次渲染过程中，我们不会处理它们，但我们需要跟踪剩余的位掩码。
     const lastInterleaved = queue.shared.interleaved;
     if (lastInterleaved !== null) {
       let interleaved = lastInterleaved;
