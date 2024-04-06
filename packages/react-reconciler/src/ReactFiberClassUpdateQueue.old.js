@@ -557,6 +557,9 @@ export function processUpdateQueue<State>(
         };
         if (newLastBaseUpdate === null) {
           newFirstBaseUpdate = newLastBaseUpdate = clone;
+          // 为什么此处 newBaseState 只在第一次赋值？
+          // 因为当存在 跳过更新的队列之后，后续的满足优先级的更新即使本次执行，其也会放进 newBaseUpdate 中，因为要保证最终结果的执行顺序。
+          // 而因为 后续所有的更新都入队了，那么就只要保存第一次的 state 即可
           newBaseState = newState;
         } else {
           newLastBaseUpdate = newLastBaseUpdate.next = clone;
