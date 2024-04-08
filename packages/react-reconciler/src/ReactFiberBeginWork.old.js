@@ -1312,6 +1312,8 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   const nextProps = workInProgress.pendingProps;
   const prevState = workInProgress.memoizedState;
   const prevChildren = prevState.element;
+  // 为什么需要克隆？
+  // 因为存在高优先级打断低优先级，之前执行到一部分。防止引用副作用
   cloneUpdateQueue(current, workInProgress);
   processUpdateQueue(workInProgress, nextProps, null, renderLanes);
 

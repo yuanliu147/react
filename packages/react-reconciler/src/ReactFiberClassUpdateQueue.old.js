@@ -577,6 +577,9 @@ export function processUpdateQueue<State>(
             // it. Using NoLane works because 0 is a subset of all bitmasks, so
             // this will never be skipped by the check above.
             // 此更新将被提交，因此我们不希望取消提交。使用 NoLane 是因为 0 是所有位掩码的子集，所以上述检查永远不会跳过此更新。
+
+            // 此时是 存在跳过的更新，以及当前更新的优先级满足时才设置的 noLane
+            // 也就是说后续满足低优先级时，先前执行过（先前满足优先级）的 update 的 lane 都被更新为 noLane 了
             lane: NoLane,
 
             tag: update.tag,
